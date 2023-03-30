@@ -29,7 +29,7 @@ architecture behavioral of program_memory is
         FILE ram_file: text is in filename;
         variable ram_file_line: line;
         variable instruction: bit_vector(DATA_WIDTH-1 downto 0);
-        variable ram: ram_type := (others => (others => '0'));
+        variable ram: ram_type := (others => (others => '0')); --RAM ARRAY
     begin
         for i in ram_type'range loop
             if(not endfile(ram_file)) then

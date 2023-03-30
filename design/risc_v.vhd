@@ -137,7 +137,7 @@ architecture behavioral of ph_risc_v is
         forward_control.id_forward_mux_r2 := false;
         
         ex_mem_writes_back := (ex_mem_reg_write = '1');
-        ex_mem_reg_rd_not_x0 := (ex_mem_rd /= std_logic_vector(to_unsigned(0, ex_mem_rd'length)));
+        ex_mem_reg_rd_not_x0 := (ex_mem_rd /= std_logic_vector(to_unsigned(0, ex_mem_rd'length))); 
         mem_wb_writes_back := (mem_wb_reg_write = '1');
         mem_wb_reg_rd_not_x0 := (mem_wb_rd /= std_logic_vector(to_unsigned(0, mem_wb_rd'length)));
 
@@ -444,14 +444,14 @@ begin
     id_r1_equals_r2 <= '1' when (id_read1_final_data = id_read2_final_data) else '0';
     id_control_branch_taken <= id_control_is_branch and id_r1_equals_r2;
       
-    wb_register_file_write_data <= mem_wb_reg.alu_result when mem_wb_reg.control_mem_to_reg = '0' else mem_wb_reg.memory_data;
+    wb_register_file_write_data <= mem_wb_reg.alu_result when mem_wb_reg.control_mem_to_reg = '0' else mem_wb_reg.memory_data; --LOAD
     
     --controls
     pc_src <= id_control_branch_taken;
     
     pc <= pc_reg;     
     data_address <= ex_mem_reg.alu_result(DATA_ADDRESS_WIDTH-1 downto 0);    
-    data_write <= ex_mem_reg.register_file_data2;  
+    data_write <= ex_mem_reg.register_file_data2;  --STORE
     data_write_en <= ex_mem_reg.control_mem_write;  
     
 end behavioral;
