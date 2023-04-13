@@ -4,6 +4,13 @@ use ieee.numeric_std.all;
 use work.common.all;
 
 
+
+-------------------
+--more bits for ALU control (more than 3)
+--merge entire funct7 and funct3 for the alu control process
+
+-------------------
+
 entity ph_risc_v is    
     generic(
         PROGRAM_ADDRESS_WIDTH: natural := 6;
@@ -57,7 +64,7 @@ architecture behavioral of ph_risc_v is
         register_file_data1: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
         register_file_data2: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
         sign_extended_immediate: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
-        alu_control: std_logic_vector(3 downto 0);
+        alu_control: std_logic_vector(9 downto 0); --FUNCT7 AND FUNCT3
         register_file_rs1: std_logic_vector(REGISTER_FILE_ADDRESS_WIDTH-1 downto 0);
         register_file_rs2: std_logic_vector(REGISTER_FILE_ADDRESS_WIDTH-1 downto 0);
         register_file_rd: std_logic_vector(REGISTER_FILE_ADDRESS_WIDTH-1 downto 0);
@@ -275,7 +282,7 @@ begin
     end process next_pc_logic;
     
     id_sign_extended_immediate <= generate_immediate(if_id_reg.instruction);
-    
+   --------------------------------------- 
     control_unit: process (if_id_reg.instruction.opcode) is
         constant R_FORMAT: std_logic_vector(6 downto 0) := "0110011";
         constant ADDI: std_logic_vector(6 downto 0) := "0010011";
@@ -311,30 +318,40 @@ begin
             id_control_is_branch <= '1';          
         end if;
     end process control_unit;   
-
+------------------------------------------------------------------------------
     alu_control: process (id_ex_reg.alu_control, id_ex_reg.control_alu_op) is
         constant ALU_AND: std_logic_vector(2 downto 0) := "000";
         constant ALU_OR: std_logic_vector(2 downto 0) := "001";
         constant ALU_ADD: std_logic_vector(2 downto 0) := "010";
         constant ALU_SUB: std_logic_vector(2 downto 0) := "110";
+		
+		constant ALU_SLL: std_logic_vector(2 downto 0) := "010"; --
+		constant ALU_SRL: std_logic_vector(2 downto 0) := "111"; --
+		
     begin    
         ex_alu_control <= ALU_AND;
              
         if id_ex_reg.control_alu_op = "00" then
             ex_alu_control <= ALU_ADD;
-        elsif id_ex_reg.control_alu_op = "01" then
+        elsif id_ex_reg.control_alu_op = "01" then --?
             ex_alu_control <= ALU_SUB;
-        elsif id_ex_reg.alu_control = "0000" then
+			
+        elsif id_ex_reg.alu_control = "0000000000" then -----------ADD
             ex_alu_control <= ALU_ADD;
-        elsif id_ex_reg.alu_control = "1000" then
+        elsif id_ex_reg.alu_control = "0100000000" then -----------SUB
             ex_alu_control <= ALU_SUB;       
-        elsif id_ex_reg.alu_control = "0111" then
+        elsif id_ex_reg.alu_control = "0000000111" then -----------AND
             ex_alu_control <= ALU_AND;
-        elsif id_ex_reg.alu_control = "0110" then
-            ex_alu_control <= ALU_OR;                                     
+        elsif id_ex_reg.alu_control = "0000000110" then -----------OR
+            ex_alu_control <= ALU_OR;     
+		elsif id_ex_reg.alu_control = "0000000001" then -- NEW
+			ex_alu_control <= ALU_SLL;
+		elsif id_ex_reg.alu_control = "0000000101" then -- NEW
+			ex_alu_control <= ALU_SRL;
+			
         end if;
     end process alu_control;
-    
+ -----------------------------------------------------------------------------------   
     forward_controls <= control_forwarding(
         ex_mem_reg_write => ex_mem_reg.control_reg_write,
         ex_mem_rd => ex_mem_reg.register_file_rd,
@@ -413,7 +430,7 @@ begin
         register_file_data1 => id_read1_final_data, 
         register_file_data2 => id_read2_final_data, 
         sign_extended_immediate => id_sign_extended_immediate, 
-        alu_control => if_id_reg.instruction.funct7(5) & if_id_reg.instruction.funct3, 
+        alu_control => if_id_reg.instruction.funct7 & if_id_reg.instruction.funct3, ---MERGED FUNCT7 AND FUCNT3
         register_file_rs1 => if_id_reg.instruction.rs1,
         register_file_rs2 => if_id_reg.instruction.rs2,
         register_file_rd => if_id_reg.instruction.rd
