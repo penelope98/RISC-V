@@ -1,6 +1,6 @@
 restart -f -nolist -nowave -nobreak -nolog -novirtuals -noassertions -nofcovers -noatv
 
-transcript open
+
 
 add wave -position end  sim:/testbench/sys/clk
 add wave -position end  sim:/testbench/sys/reset_n
@@ -52,20 +52,7 @@ add wave -position end  sim:/testbench/sys/cpu/pc_src
 add wave -position end -radix "Unsigned"  sim:/testbench/sys/cpu/pc_reg
 
 
-
 run 10000ns
-add list \
-sim:/testbench/sys/data_address \
-sim:/testbench/sys/data_read 
-
-
-
-transcript select all
-transcript copy
-set f [open "list_file.txt" "w"]
-puts -nonewline $f [clipboard get]
-close $f
-transcript close
 
 
 
