@@ -57,4 +57,3 @@ sim:/testbench/sys/data_read
 write list -window .main_pane.list.interior.cs.body {C:\Users\Penelope\Desktop\LU\2nd sem\ICP1 RISC-V\Modelsim\RISC-V OUTPUT}
 
 
-
