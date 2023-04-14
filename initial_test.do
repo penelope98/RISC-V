@@ -1,7 +1,5 @@
 restart -f -nolist -nowave -nobreak -nolog -novirtuals -noassertions -nofcovers -noatv
 
-
-
 add wave -position end  sim:/testbench/sys/clk
 add wave -position end  sim:/testbench/sys/reset_n
 add wave -position end  sim:/testbench/sys/redundant
@@ -12,13 +10,10 @@ add wave -position end -radix "Unsigned" sim:/testbench/sys/data_address
 add wave -position end  sim:/testbench/sys/data_read
 add wave -position end  sim:/testbench/sys/data_write
 
-add wave -position end -color "Orange" sim:/testbench/sys/cpu/clk
-add wave -position end -color "Orange" sim:/testbench/sys/cpu/reset_n
 add wave -position end -color "Orange" sim:/testbench/sys/cpu/program_read
 add wave -position end -color "Orange" -radix "Unsigned" sim:/testbench/sys/cpu/pc
 add wave -position end -color "Orange" -radix "Unsigned" sim:/testbench/sys/cpu/data_address
 add wave -position end -color "Orange" sim:/testbench/sys/cpu/data_read
-add wave -position end -color "Orange" sim:/testbench/sys/cpu/data_write_en
 add wave -position end -color "Orange" sim:/testbench/sys/cpu/data_write
 
 
@@ -52,8 +47,13 @@ add wave -position end  sim:/testbench/sys/cpu/pc_src
 add wave -position end -radix "Unsigned"  sim:/testbench/sys/cpu/pc_reg
 
 
+
 run 10000ns
 
+add list \
+sim:/testbench/sys/data_address \
+sim:/testbench/sys/data_read 
 
+write list -window .main_pane.list.interior.cs.body {C:\Users\Penelope\Desktop\LU\2nd sem\ICP1 RISC-V\Modelsim\RISC-V OUTPUT}
 
 

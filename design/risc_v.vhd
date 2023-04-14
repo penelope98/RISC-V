@@ -212,7 +212,7 @@ architecture behavioral of ph_risc_v is
     signal ex_alu_result: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);    
     signal ex_alu_left_operand: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
     signal ex_alu_right_operand: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
-    signal ex_alu_control: std_logic_vector(2 downto 0);
+    signal ex_alu_control: std_logic_vector(3 downto 0);
     signal ex_read2_final_data: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
     
     signal ex_forward_mux_left_operand: std_logic_vector(1 downto 0);
@@ -320,13 +320,20 @@ begin
     end process control_unit;   
 ------------------------------------------------------------------------------
     alu_control: process (id_ex_reg.alu_control, id_ex_reg.control_alu_op) is
-        constant ALU_AND: std_logic_vector(2 downto 0) := "000";
-        constant ALU_OR: std_logic_vector(2 downto 0) := "001";
-        constant ALU_ADD: std_logic_vector(2 downto 0) := "010";
-        constant ALU_SUB: std_logic_vector(2 downto 0) := "110";
+        constant ALU_AND: std_logic_vector(3 downto 0) := "0000"; --add and addi
+        constant ALU_OR: std_logic_vector(3 downto 0) := "0001"; --or and ori
+        constant ALU_ADD: std_logic_vector(3 downto 0) := "0010"; --add and addi
+        constant ALU_SUB: std_logic_vector(3 downto 0) := "0011"; --sub 
 		
-		constant ALU_SLL: std_logic_vector(2 downto 0) := "010"; --
-		constant ALU_SRL: std_logic_vector(2 downto 0) := "111"; --
+		constant ALU_XOR: std_logic_vector(3 downto 0) := "0100"; --xor and xori
+		constant ALU_SLL: std_logic_vector(3 downto 0) := "0101"; --sll and slli
+		constant ALU_SRL: std_logic_vector(3 downto 0) := "0110"; -- srl srli
+		
+		constant ALU_SRA: std_logic_vector(3 downto 0) := "0111"; -- sra and srai
+		constant ALU_SLTU: std_logic_vector(3 downto 0) := "1000"; -- sltu and sltiu
+		constant ALU_SLTI: std_logic_vector(3 downto 0) := "1001"; -- slti and slt
+		
+		
 		
     begin    
         ex_alu_control <= ALU_AND;
@@ -343,11 +350,22 @@ begin
         elsif id_ex_reg.alu_control = "0000000111" then -----------AND
             ex_alu_control <= ALU_AND;
         elsif id_ex_reg.alu_control = "0000000110" then -----------OR
-            ex_alu_control <= ALU_OR;     
-		elsif id_ex_reg.alu_control = "0000000001" then -- NEW
+            ex_alu_control <= ALU_OR;  
+			
+		elsif id_ex_reg.alu_control = "0000000100" then -- XOR
+			ex_alu_control <= ALU_XOR;			
+		elsif id_ex_reg.alu_control = "0000000001" then -- SLL
 			ex_alu_control <= ALU_SLL;
-		elsif id_ex_reg.alu_control = "0000000101" then -- NEW
+		elsif id_ex_reg.alu_control = "0000000101" then -- SRL
 			ex_alu_control <= ALU_SRL;
+
+		elsif id_ex_reg.alu_control = "0100000101" then -- SRA
+			ex_alu_control <= ALU_SRA;
+		elsif id_ex_reg.alu_control = "0000000011" then -- SLTU AND SLTIU
+			ex_alu_control <= ALU_SLTU;
+		elsif id_ex_reg.alu_control = "0000000010" then -- SLTI
+			ex_alu_control <= ALU_SLTI;
+								
 			
         end if;
     end process alu_control;
