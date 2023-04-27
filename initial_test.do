@@ -1,3 +1,4 @@
+vsim -gui work.testbench
 restart -f -nolist -nowave -nobreak -nolog -novirtuals -noassertions -nofcovers -noatv
 
 add wave -position end  sim:/testbench/sys/clk
@@ -48,12 +49,13 @@ add wave -position end -radix "Unsigned"  sim:/testbench/sys/cpu/pc_reg
 
 
 
-run 10000ns
-
 add list \
-sim:/testbench/sys/data_address \
-sim:/testbench/sys/data_read 
+sim:/testbench/sys/cpu/reg_file/registers 
+
+run 5000ns
 
 write list -window .main_pane.list.interior.cs.body {C:\Users\Penelope\Desktop\LU\2nd sem\ICP1 RISC-V\Modelsim\RISC-V OUTPUT}
 
+run 5000ns
 
+write list -window .main_pane.list.interior.cs.body {C:\Users\Penelope\Desktop\LU\2nd sem\ICP1 RISC-V\Modelsim\RISC-V OUTPUT}

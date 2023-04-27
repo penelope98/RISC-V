@@ -75,19 +75,19 @@ begin
         );
     
     -- Just added to force the tools not to optimize away the logic
-    process (clk)
-        variable red: std_logic := '0';
-    begin
-        if rising_edge(clk) then
-            if reset_n = '0' then
-                red := '0';
-            else
-                for i in data_write'range loop
-                    red := red or data_write(i);
-                end loop;
-            end if;            
-            redundant <= red;
-        end if;
-    end process;
+   -- process (clk)
+        --variable red: std_logic := '0';
+  -- begin
+      --  if rising_edge(clk) then
+        --    if reset_n = '0' then
+          --      red := '0';
+          --  else
+             --   for i in data_write'range loop
+              --      red := red or data_write(i);
+               -- end loop;
+           -- end if;            
+           -- redundant <= red;
+       -- end if;
+   -- end process;
     
 end structural;

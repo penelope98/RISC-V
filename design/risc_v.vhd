@@ -87,7 +87,7 @@ architecture behavioral of ph_risc_v is
         alu_result: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
         register_file_rd: std_logic_vector(REGISTER_FILE_ADDRESS_WIDTH-1 downto 0);
     end record;
-    
+ --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++FUNCTIONS++++++++++++++++++++++++++++++++++++++++++++++++++++   
     constant FORWARD_NONE: std_logic_vector(1 downto 0) := "00";
     constant FORWARD_EX_MEM: std_logic_vector(1 downto 0) := "01";
     constant FORWARD_MEM_WB: std_logic_vector(1 downto 0) := "10";
@@ -177,7 +177,10 @@ architecture behavioral of ph_risc_v is
         
         return forward_control;
     end;    
-        
+  --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  
+  
+  -->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>INTERNAL SIGNALS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     signal pc_reg, pc_next: std_logic_vector(PROGRAM_ADDRESS_WIDTH-1 downto 0);
     
     signal if_id_reg, if_id_next: if_id_type;
@@ -185,15 +188,15 @@ architecture behavioral of ph_risc_v is
     signal ex_mem_reg, ex_mem_next: ex_mem_type;
     signal mem_wb_reg, mem_wb_next: mem_wb_type;
     
-    -- ID stage
+    -- ID stage>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     signal id_sign_extended_immediate: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
     signal id_sign_extended_immediate_shifted_1: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
     signal id_branch_address: std_logic_vector(PROGRAM_ADDRESS_WIDTH-1 downto 0);
     signal id_register_file_read1_data: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
     signal id_register_file_read2_data: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
     signal id_r1_equals_r2: std_logic;
-    signal id_read1_final_data: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
-    signal id_read2_final_data: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
+    signal id_read1_final_data, id_read1_final_data_signfixed: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
+    signal id_read2_final_data, id_read2_final_data_signfixed: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
 
     signal id_control_alu_op: std_logic_vector(1 downto 0);
     signal id_control_alu_src: std_logic;
@@ -207,7 +210,7 @@ architecture behavioral of ph_risc_v is
     signal id_forward_mux_r1: boolean;
     signal id_forward_mux_r2: boolean;
         
-    -- EX stage    
+    -- EX stage >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   
     signal ex_alu_zero: std_logic;
     signal ex_alu_result: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);    
     signal ex_alu_left_operand: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
@@ -218,14 +221,38 @@ architecture behavioral of ph_risc_v is
     signal ex_forward_mux_left_operand: std_logic_vector(1 downto 0);
     signal ex_forward_mux_right_operand: std_logic_vector(1 downto 0);
 
-    -- WB stage
+    -- WB stage>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     signal wb_register_file_write_data: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
 
-    -- control
+    -- control>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     signal pc_src: std_logic;
     signal forward_controls: forward_control_type;
-       
-begin
+	
+	--additional>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	signal comparator_great,comparator_less,comparator_equal,comparator_great_s,comparator_less_s,comparator_equal_s: std_logic;
+	
+	 --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~COMPONENTS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	component comparator 
+    generic(DATA_WIDTH: integer := 32);
+    port(
+        left_operand: in std_logic_vector(DATA_WIDTH-1 downto 0);
+        right_operand: in std_logic_vector(DATA_WIDTH-1 downto 0);
+        equal32: out std_logic; 
+		great32: out std_logic; 
+		less32: out std_logic
+    );
+	end component;
+          
+	component abs_value
+	generic(DATA_WIDTH: integer := 32);
+	port(
+        original: in std_logic_vector(DATA_WIDTH-1 downto 0);
+		absolute: out std_logic_vector(DATA_WIDTH-1 downto 0)
+    );
+	end component;
+	     
+	   
+begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
     registers: process (clk) is
     begin
@@ -245,7 +272,7 @@ begin
             end if;
         end if;
     end process registers;
- 
+ --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~UNITS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     reg_file: entity work.register_file 
         generic map (
             DATA_WIDTH => CPU_DATA_WIDTH,
@@ -271,7 +298,43 @@ begin
             zero => ex_alu_zero,
             result => ex_alu_result
         );
+	
+	
+	abs_unit_1: abs_value 
+		generic map ( DATA_WIDTH => CPU_DATA_WIDTH )    
+		port map( original=>id_read1_final_data, absolute => id_read1_final_data_signfixed);
+	abs_unit_2: abs_value 
+		generic map ( DATA_WIDTH => CPU_DATA_WIDTH )    
+		port map( original=>id_read2_final_data, absolute => id_read2_final_data_signfixed);
+	
+	comparator_unit_unsigned: comparator 
+		generic map (
+            DATA_WIDTH => CPU_DATA_WIDTH
+        )
+		port map(
+        left_operand => id_read1_final_data,
+        right_operand => id_read2_final_data,
+        equal32 => comparator_equal,
+		great32 => comparator_great,
+		less32 => comparator_less
+		);
 
+	comparator_unit_signed: comparator 
+		generic map (
+            DATA_WIDTH => CPU_DATA_WIDTH
+        )    
+		port map(
+        left_operand => id_read1_final_data_signfixed,
+        right_operand => id_read2_final_data_signfixed,
+        equal32 => comparator_equal_s,
+		great32 => comparator_great_s,
+		less32 => comparator_less_s
+		);
+
+
+	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
+
+--############################################################################################################PROCESSES####################################################3
     next_pc_logic: process (pc_reg, id_branch_address, pc_src) is
     begin
         if pc_src = '0' then
@@ -280,7 +343,7 @@ begin
             pc_next <= id_branch_address;
         end if;
     end process next_pc_logic;
-    
+    --------------------------------------
     id_sign_extended_immediate <= generate_immediate(if_id_reg.instruction);
    --------------------------------------- 
     control_unit: process (if_id_reg.instruction.opcode) is
@@ -288,7 +351,7 @@ begin
         constant ADDI: std_logic_vector(6 downto 0) := "0010011";
         constant LOAD: std_logic_vector(6 downto 0) := "0000011";
         constant STORE: std_logic_vector(6 downto 0) := "0100011";
-        constant BEQ: std_logic_vector(6 downto 0) := "1100011";
+        constant BRANCH: std_logic_vector(6 downto 0) := "1100011";
     begin
         id_control_alu_op <= "00";
         id_control_alu_src <= '0';
@@ -313,21 +376,21 @@ begin
         elsif if_id_reg.instruction.opcode = STORE then
             id_control_alu_src <= '1';
             id_control_mem_write <= '1';
-        elsif if_id_reg.instruction.opcode = BEQ then
+        elsif if_id_reg.instruction.opcode = BRANCH then
             id_control_alu_op <= "01"; 
             id_control_is_branch <= '1';          
         end if;
     end process control_unit;   
-------------------------------------------------------------------------------
+
     alu_control: process (id_ex_reg.alu_control, id_ex_reg.control_alu_op) is
-        constant ALU_AND: std_logic_vector(3 downto 0) := "0000"; --add and addi
+        constant ALU_AND: std_logic_vector(3 downto 0) := "0000"; --and and andi
         constant ALU_OR: std_logic_vector(3 downto 0) := "0001"; --or and ori
         constant ALU_ADD: std_logic_vector(3 downto 0) := "0010"; --add and addi
-        constant ALU_SUB: std_logic_vector(3 downto 0) := "0011"; --sub 
+        constant ALU_SUB: std_logic_vector(3 downto 0) := "0110"; --sub 
 		
 		constant ALU_XOR: std_logic_vector(3 downto 0) := "0100"; --xor and xori
 		constant ALU_SLL: std_logic_vector(3 downto 0) := "0101"; --sll and slli
-		constant ALU_SRL: std_logic_vector(3 downto 0) := "0110"; -- srl srli
+		constant ALU_SRL: std_logic_vector(3 downto 0) := "0011"; -- srl srli
 		
 		constant ALU_SRA: std_logic_vector(3 downto 0) := "0111"; -- sra and srai
 		constant ALU_SLTU: std_logic_vector(3 downto 0) := "1000"; -- sltu and sltiu
@@ -428,7 +491,45 @@ begin
     
     id_read1_final_data <= wb_register_file_write_data when id_forward_mux_r1 else id_register_file_read1_data;
     id_read2_final_data <= wb_register_file_write_data when id_forward_mux_r2 else id_register_file_read2_data;
-    
+	
+	
+	id_r1_equals_r2 <= '1' when (id_read1_final_data = id_read2_final_data) else '0'; ----------------------
+	
+	----------------------Branching process
+	branching_decision: process (id_sign_extended_immediate,if_id_reg.pc,id_control_is_branch,id_ex_reg.alu_control)
+	
+	
+	    constant BEQ: std_logic_vector(2 downto 0) := "000"; 
+        constant BNE: std_logic_vector(2 downto 0) := "001";
+        constant BLT: std_logic_vector(2 downto 0) := "100"; 
+        constant BGE: std_logic_vector(2 downto 0) := "101"; 
+		constant BLTU: std_logic_vector(2 downto 0) := "110"; 
+		constant BGEU: std_logic_vector(2 downto 0) := "111"; 
+		
+	begin
+	
+	id_sign_extended_immediate_shifted_1 <= id_sign_extended_immediate(CPU_DATA_WIDTH-2 downto 0) & '0'; -----------------
+	id_branch_address <= std_logic_vector(signed(if_id_reg.pc) + signed(id_sign_extended_immediate_shifted_1(PROGRAM_ADDRESS_WIDTH-1 downto 0))); ----------------
+	
+	if id_ex_reg.alu_control(2 downto 0) = BEQ then
+		id_control_branch_taken <= comparator_equal; 
+	elsif id_ex_reg.alu_control(2 downto 0) = BNE then
+		id_control_branch_taken <= not comparator_equal; 
+	elsif id_ex_reg.alu_control(2 downto 0) = BLT then
+		id_control_branch_taken <= not comparator_less_s;
+	elsif id_ex_reg.alu_control(2 downto 0) = BGE then
+		id_control_branch_taken <= not comparator_great_s;
+	elsif id_ex_reg.alu_control(2 downto 0) = BLTU then
+		id_control_branch_taken <= not comparator_less; --last off: just added intermediate signals, need to invert/make the signfixed
+	elsif id_ex_reg.alu_control(2 downto 0) = BGEU then
+		id_control_branch_taken <= not comparator_great; 
+	end if;
+	
+	pc_src <= id_control_branch_taken and id_control_is_branch; ---------------BRANCH
+	
+	end process;
+	
+    ----------------------------------------------
     -- Pipeline registers next state logic
     if_id_next <= (
         pc => pc_reg, 
@@ -472,18 +573,13 @@ begin
         register_file_rd => ex_mem_reg.register_file_rd
     );
   
-    id_sign_extended_immediate_shifted_1 <= id_sign_extended_immediate(CPU_DATA_WIDTH-2 downto 0) & '0';
-    
-    id_branch_address <= std_logic_vector(signed(if_id_reg.pc) + signed(id_sign_extended_immediate_shifted_1(PROGRAM_ADDRESS_WIDTH-1 downto 0)));
-    
-    id_r1_equals_r2 <= '1' when (id_read1_final_data = id_read2_final_data) else '0';
-    id_control_branch_taken <= id_control_is_branch and id_r1_equals_r2;
-      
+  
+  ------------------------
+   
     wb_register_file_write_data <= mem_wb_reg.alu_result when mem_wb_reg.control_mem_to_reg = '0' else mem_wb_reg.memory_data; --LOAD
     
     --controls
-    pc_src <= id_control_branch_taken;
-    
+   
     pc <= pc_reg;     
     data_address <= ex_mem_reg.alu_result(DATA_ADDRESS_WIDTH-1 downto 0);    
     data_write <= ex_mem_reg.register_file_data2;  --STORE
