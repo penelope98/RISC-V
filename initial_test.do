@@ -58,7 +58,3 @@ write list -window .main_pane.list.interior.cs.body {C:\Users\Penelope\Desktop\L
 
 run 5000ns
 
-<<<<<<< HEAD
-write list -window .main_pane.list.interior.cs.body {C:\Users\Penelope\Desktop\LU\2nd sem\ICP1 RISC-V\Modelsim\RISC-V OUTPUT}
-=======
->>>>>>> refs/remotes/origin/main
