@@ -496,8 +496,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	id_r1_equals_r2 <= '1' when (id_read1_final_data = id_read2_final_data) else '0'; ----------------------
 	
 	----------------------Branching process
-	branching_decision: process (id_sign_extended_immediate,if_id_reg.pc,id_control_is_branch,id_ex_reg.alu_control)
-	
+	branching_decision: process (id_sign_extended_immediate,if_id_reg.pc,id_control_is_branch,id_ex_reg.alu_control,comparator_equal,comparator_less,comparator_great,comparator_less_s,comparator_great_s)
 	
 	    constant BEQ: std_logic_vector(2 downto 0) := "000"; 
         constant BNE: std_logic_vector(2 downto 0) := "001";
@@ -508,27 +507,27 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 		
 	begin
 	
+	id_control_branch_taken <= '0'; --DIP
 	id_sign_extended_immediate_shifted_1 <= id_sign_extended_immediate(CPU_DATA_WIDTH-2 downto 0) & '0'; -----------------
 	id_branch_address <= std_logic_vector(signed(if_id_reg.pc) + signed(id_sign_extended_immediate_shifted_1(PROGRAM_ADDRESS_WIDTH-1 downto 0))); ----------------
 	
-	if id_ex_reg.alu_control(2 downto 0) = BEQ then
+	if if_id_reg.instruction.funct3 = BEQ then
 		id_control_branch_taken <= comparator_equal; 
-	elsif id_ex_reg.alu_control(2 downto 0) = BNE then
+	elsif if_id_reg.instruction.funct3 = BNE then --bne
 		id_control_branch_taken <= not comparator_equal; 
-	elsif id_ex_reg.alu_control(2 downto 0) = BLT then
-		id_control_branch_taken <= not comparator_less_s;
-	elsif id_ex_reg.alu_control(2 downto 0) = BGE then
-		id_control_branch_taken <= not comparator_great_s;
-	elsif id_ex_reg.alu_control(2 downto 0) = BLTU then
-		id_control_branch_taken <= not comparator_less; --last off: just added intermediate signals, need to invert/make the signfixed
-	elsif id_ex_reg.alu_control(2 downto 0) = BGEU then
-		id_control_branch_taken <= not comparator_great; 
+	elsif if_id_reg.instruction.funct3 = BLT then --blt
+		id_control_branch_taken <= comparator_less_s;
+	elsif if_id_reg.instruction.funct3 = BGE then --bge
+		id_control_branch_taken <= comparator_great_s;
+	elsif if_id_reg.instruction.funct3 = BLTU then --bltu
+		id_control_branch_taken <= comparator_less;
+	elsif if_id_reg.instruction.funct3 = BGEU then --bgeu
+		id_control_branch_taken <= comparator_great; 
 	end if;
-	
-	pc_src <= id_control_branch_taken and id_control_is_branch; ---------------BRANCH
-	
+				
 	end process;
 	
+	pc_src <= id_control_branch_taken and id_control_is_branch; ---------------BRANCH	
     ----------------------------------------------
     -- Pipeline registers next state logic
     if_id_next <= (

@@ -18,7 +18,7 @@ architecture behavioral of comparator is
 
 	component comparator_comp
 		port (a,b,g,l,e: in std_logic;
-				great,less,equal: out std_logic);
+			  great,less,equal: out std_logic);
 	end component;
 
   signal gre : std_logic_vector(DATA_WIDTH downto 0);
@@ -27,7 +27,10 @@ architecture behavioral of comparator is
   
 
 begin
-
+ 
+    gre(DATA_WIDTH) <= '0';
+    les(DATA_WIDTH) <= '0';
+    equ(DATA_WIDTH) <= '1';
 
   gen: 
       for i in 0 to DATA_WIDTH-1 generate
@@ -44,9 +47,9 @@ begin
                   equal => equ(i)  -- equ(i+1)
               );		
 		
-    great32 <= gre(DATA_WIDTH-1);
-    less32 <= les(DATA_WIDTH-1);          
-    equal32 <= equ(DATA_WIDTH-1);
+    great32 <= gre(0);
+    less32 <= les(0);          
+    equal32 <= equ(0);
 	end generate;
 
 end behavioral;

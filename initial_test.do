@@ -18,8 +18,8 @@ add wave -position end -color "Orange" sim:/testbench/sys/cpu/data_read
 add wave -position end -color "Orange" sim:/testbench/sys/cpu/data_write
 
 
-add wave -position end -color "Violet Red" -radix "Unsigned" sim:/testbench/sys/cpu/if_id_next.pc
-add wave -position end -color "Violet Red" sim:/testbench/sys/cpu/if_id_next.instruction
+add wave -position end -color "Violet Red" -radix "Unsigned" sim:/testbench/sys/cpu/if_id_reg.pc
+add wave -position end -color "Violet Red" sim:/testbench/sys/cpu/if_id_reg.instruction
 
 add wave -position end -color "Cyan" sim:/testbench/sys/cpu/id_ex_reg.control_alu_op
 add wave -position end -color "Cyan" sim:/testbench/sys/cpu/id_ex_reg.register_file_data1
@@ -29,6 +29,7 @@ add wave -position end -color "Cyan" sim:/testbench/sys/cpu/id_ex_reg.alu_contro
 add wave -position end -color "Cyan" sim:/testbench/sys/cpu/id_ex_reg.register_file_rs1
 add wave -position end -color "Cyan" sim:/testbench/sys/cpu/id_ex_reg.register_file_rs2
 add wave -position end -color "Cyan" sim:/testbench/sys/cpu/id_ex_reg.register_file_rd
+add wave -position end -color "Blue" -radix "Unsigned" sim:/testbench/sys/cpu/id_branch_address
 
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_mem_read
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_mem_write
@@ -44,8 +45,25 @@ add wave -position end -color "Blue" sim:/testbench/sys/cpu/mem_wb_reg.memory_da
 add wave -position end -color "Blue" sim:/testbench/sys/cpu/mem_wb_reg.alu_result
 add wave -position end -color "Blue" sim:/testbench/sys/cpu/mem_wb_reg.register_file_rd
 
+add wave -position end -color "Sky Blue" sim:/testbench/sys/cpu/comparator_great
+add wave -position end -color "Sky Blue"  sim:/testbench/sys/cpu/comparator_less
+add wave -position end -color "Sky Blue"  sim:/testbench/sys/cpu/comparator_equal
+add wave -position end -color "Sky Blue"  sim:/testbench/sys/cpu/comparator_great_s
+add wave -position end -color "Sky Blue"  sim:/testbench/sys/cpu/comparator_less_s
+add wave -position end -color "Sky Blue"  sim:/testbench/sys/cpu/comparator_equal_s
+add wave -position end -color "Yellow" sim:/testbench/sys/cpu/id_control_branch_taken
+add wave -position end -color "Blue" sim:/testbench/sys/cpu/id_control_is_branch
+add wave -position end -color "Blue" -radix "Unsigned" sim:/testbench/sys/cpu/id_branch_address
 add wave -position end  sim:/testbench/sys/cpu/pc_src
 add wave -position end -radix "Unsigned"  sim:/testbench/sys/cpu/pc_reg
+add wave -position end -radix "Unsigned" sim:/testbench/sys/cpu/comparator_unit_unsigned/left_operand
+add wave -position end -radix "Unsigned" sim:/testbench/sys/cpu/comparator_unit_unsigned/right_operand
+add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/equal32
+add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/great32
+add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/less32
+add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/gre
+add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/les
+add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/equ
 
 
 
