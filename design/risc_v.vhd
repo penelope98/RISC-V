@@ -227,6 +227,8 @@ architecture behavioral of ph_risc_v is
     -- control>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     signal pc_src: std_logic;
     signal forward_controls: forward_control_type;
+	---COMPRESSED MODE
+	signal pc_cmp: std_logic;
 	
 	--additional>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	signal comparator_great,comparator_less,comparator_equal,comparator_great_s,comparator_less_s,comparator_equal_s: std_logic;
@@ -335,16 +337,29 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
 
 --############################################################################################################PROCESSES####################################################3
-    next_pc_logic: process (pc_reg, id_branch_address, pc_src) is
+    next_pc_logic: process (pc_reg, id_branch_address, pc_src,pc_cmp) is
     begin
-        if pc_src = '0' then
+        if pc_src = '0' and pc_cmp = '0' then
             pc_next <= std_logic_vector(unsigned(pc_reg) + 4);
-        else 
+        elsif pc_src = '0' and pc_cmp = '1' then
+			pc_next <= std_logic_vector(unsigned(pc_reg) + 2);
+		else
             pc_next <= id_branch_address;
         end if;
     end process next_pc_logic;
     --------------------------------------
-    id_sign_extended_immediate <= generate_immediate(if_id_reg.instruction);
+	compressed_detect: process(program_read) is
+	begin
+	
+		if program_read(1 downto 0) = "11" then
+			pc_cmp <= '0';
+		else
+			pc_cmp <= '1';
+		end if;
+	
+	end process;
+	--------------------------------------
+    id_sign_extended_immediate <= generate_immediate(if_id_reg.instruction);	
    --------------------------------------- 
     control_unit: process (if_id_reg.instruction.opcode) is
         constant R_FORMAT: std_logic_vector(6 downto 0) := "0110011";
@@ -352,6 +367,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         constant LOAD: std_logic_vector(6 downto 0) := "0000011";
         constant STORE: std_logic_vector(6 downto 0) := "0100011";
         constant BRANCH: std_logic_vector(6 downto 0) := "1100011";
+
     begin
         id_control_alu_op <= "00";
         id_control_alu_src <= '0';
@@ -432,7 +448,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 			
         end if;
     end process alu_control;
- -----------------------------------------------------------------------------------   
+ ----------------------------------------------------------------------------------- forwarding function }}}}}}}}}}}}}}}}}}
     forward_controls <= control_forwarding(
         ex_mem_reg_write => ex_mem_reg.control_reg_write,
         ex_mem_rd => ex_mem_reg.register_file_rd,
@@ -442,11 +458,13 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         if_id_rs2 => if_id_reg.instruction.rs2,
         id_ex_rs1 => id_ex_reg.register_file_rs1,
         id_ex_rs2 => id_ex_reg.register_file_rs2
-    );
+    ); -------------------------------------------------------------------------------------------------- }}}}}}}}}}}}}}}}}}}}}}}
     ex_forward_mux_left_operand <= forward_controls.ex_forward_mux_left_operand;
     ex_forward_mux_right_operand <= forward_controls.ex_forward_mux_right_operand;
-    id_forward_mux_r1 <= forward_controls.id_forward_mux_r1;
-    id_forward_mux_r2 <= forward_controls.id_forward_mux_r2;    
+    id_forward_mux_r1 <= forward_controls.id_forward_mux_r1; --flag 1
+    id_forward_mux_r2 <= forward_controls.id_forward_mux_r2; --flag 2
+
+----------------------------------------------------------------------------------------	
 
     alu_and_forwarding_left_mux: process (
         ex_forward_mux_left_operand, id_ex_reg.register_file_data1, 
@@ -455,14 +473,14 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         ex_alu_left_operand <= (others => '0');
         
         if ex_forward_mux_left_operand = FORWARD_NONE then
-            ex_alu_left_operand <= id_ex_reg.register_file_data1;
+            ex_alu_left_operand <= id_ex_reg.register_file_data1; --ALU gets data from id_ex_reg
         elsif ex_forward_mux_left_operand = FORWARD_EX_MEM then
-            ex_alu_left_operand <= ex_mem_reg.alu_result;
+            ex_alu_left_operand <= ex_mem_reg.alu_result; --ALU gets data from ex_mem reg
         elsif ex_forward_mux_left_operand = FORWARD_MEM_WB then
-            ex_alu_left_operand <= wb_register_file_write_data;         
+            ex_alu_left_operand <= wb_register_file_write_data;  --ALU gets data from        
         end if;  
     end process alu_and_forwarding_left_mux;
-
+-----------------------------------------------------------------------------------------------------------
     alu_and_forwarding_right_mux: process (
         ex_forward_mux_right_operand, id_ex_reg.control_alu_src, id_ex_reg.register_file_data2, 
         ex_mem_reg.alu_result, id_ex_reg.sign_extended_immediate, wb_register_file_write_data

@@ -19,7 +19,7 @@ architecture behavioral of abs_value is
  
 	fixed <= unsigned(not original) + 1;
  
-    process(fixed) 
+    process(fixed,original) 
 	begin
 	if (original(DATA_WIDTH-1) = '1') then
 		absolute <= std_logic_vector(fixed);
