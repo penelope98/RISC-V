@@ -82,11 +82,11 @@ fence.i	12	0	001	0	000111 slti	12	1	010	rd	001001
 | instruction | funct(15:13) | imm(12)   | rs1/rd(11:7) | imm/rs2(6:2) | opcode(1,0) |
 | ----------- | ------------ | --------- | ------------ | ------------ | ----------- |
 | C.ADDI      | 000          | nzimm[5]  | /= 0         | nzimm[4:0]   | 01          |
+| C.LUI       | 000          | nzimm[17] | rd /= {0,2}  | nzimm[16:12] | 01          |
+| C.LI        | 010          | imm[5]    | /= 0         | imm[4:0]     | 01          |
 | C.SRLI      | 100          | nzimm[5]  | 00    rs1/rd | nzimm[4:0]   | 01          |
 | C.SRAI      | 100          | nzimm[5]  | 01    rs1/rd | nzimm[4:0]   | 01          |
-| C.LI        | 010          | imm[5]    | /= 0         | imm[4:0]     | 01          |
-| C.LUI       | 000          | nzimm[17] | rd /= {0,2}  | nzimm[16:12] | 01          |
-| C.ANDI      | 100          | imm[5]    | 10    rs1/rd | imm[5:0]     | 10          |
+| C.ANDI      | 100          | imm[5]    | 10    rs1/rd | imm[5:0]     | 01          |
 | C.SUB       | 100          | 0         | 11    rs1/rd | 00,rs2       | 01          |
 | C.XOR       | 100          | 0         | 11    rs1/rd | 01,rs2       | 01          |
 | C.OR        | 100          | 0         | 11    rs1/rd | 10,rs2       | 01          |
