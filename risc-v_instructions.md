@@ -71,15 +71,16 @@ fence.i	12	0	001	0	000111 slti	12	1	010	rd	001001
 
 
 
-### compressed instuction
+### compressed instuction opcode 00
 | instruction | funct(15:13) | imm(12:10) | rs1(9:7) | imm(6,5)  | rd/rs2(4:2) | opcode(1,0) |
 | ----------- | ------------ | ---------- | -------- | --------- | ----------- | ----------- |
 | C.LW        | 010          | uimm[5:3]  | rs1      | uimm[2,6] | rd          | 00          |
 | C.SW        | 110          | uimm[5:3]  | rs1      | uimm[2,6] | rs2         | 00          |
 
 
-
+### compressed instuction opcode 01
 | instruction | funct(15:13) | imm(12)   | rs1/rd(11:7) | imm/rs2(6:2) | opcode(1,0) |
+| ----------- | ------------ | --------- | ------------ | ------------ | ----------- |
 | C.ADDI      | 000          | nzimm[5]  | /= 0         | nzimm[4:0]   | 01          |
 | C.SRLI      | 100          | nzimm[5]  | 00    rs1/rd | nzimm[4:0]   | 01          |
 | C.SRAI      | 100          | nzimm[5]  | 01    rs1/rd | nzimm[4:0]   | 01          |
@@ -92,9 +93,9 @@ fence.i	12	0	001	0	000111 slti	12	1	010	rd	001001
 | C.AND       | 110          | 0         | 11    rs1/rd | 11,rs2       | 01          |
 
 
-
-
+### compressed instuction opcode 11
 | instruction | funct(15:13) | imm(12)   | rs1/rd(11:7) | imm/rs2(6:2) | opcode(1,0) |
+| ----------- | ------------ | --------- | ------------ | ------------ | ----------- |
 | C.SLLI      | 000          | nzuimm[5] | /= 0         | nzuimm[5:0]  | 10          |
 | C.ADD       | 100          | 1         | /= 0         | /= 0         | 10          |
 
