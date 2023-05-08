@@ -76,7 +76,7 @@ architecture behavioral of ph_risc_v is
         control_reg_write: std_logic;
         control_mem_to_reg: std_logic;    
         alu_result: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
-        register_file_data2: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
+        register_store_addr: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
         register_file_rd: std_logic_vector(REGISTER_FILE_ADDRESS_WIDTH-1 downto 0);
     end record;
     
@@ -233,6 +233,9 @@ architecture behavioral of ph_risc_v is
 	--additional>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	signal comparator_great,comparator_less,comparator_equal,comparator_great_s,comparator_less_s,comparator_equal_s: std_logic;
 	
+	signal flush_instruction: std_logic;
+	signal input_instruction: instruction_type;
+	
 	 --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~COMPONENTS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	component comparator 
     generic(DATA_WIDTH: integer := 32);
@@ -370,7 +373,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
     begin
         id_control_alu_op <= "00";
-        id_control_alu_src <= '0';
+        id_control_alu_src <= '0'; --for determining right operand source
         id_control_mem_read <= '0';
         id_control_mem_write <= '0';
         id_control_reg_write <= '0';
@@ -464,7 +467,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     id_forward_mux_r1 <= forward_controls.id_forward_mux_r1; --flag 1
     id_forward_mux_r2 <= forward_controls.id_forward_mux_r2; --flag 2
 
-----------------------------------------------------------------------------------------	
+------------------------------------------------------------------------------------------[FW MUX1 LEFT]
 
     alu_and_forwarding_left_mux: process (
         ex_forward_mux_left_operand, id_ex_reg.register_file_data1, 
@@ -473,14 +476,14 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         ex_alu_left_operand <= (others => '0');
         
         if ex_forward_mux_left_operand = FORWARD_NONE then
-            ex_alu_left_operand <= id_ex_reg.register_file_data1; --ALU gets data from id_ex_reg
+            ex_alu_left_operand <= id_ex_reg.register_file_data1; --ALU gets data from id_ex_reg (previous stage)
         elsif ex_forward_mux_left_operand = FORWARD_EX_MEM then
-            ex_alu_left_operand <= ex_mem_reg.alu_result; --ALU gets data from ex_mem reg
+            ex_alu_left_operand <= ex_mem_reg.alu_result; --ALU gets data from ex_mem reg (prev ALU result)
         elsif ex_forward_mux_left_operand = FORWARD_MEM_WB then
-            ex_alu_left_operand <= wb_register_file_write_data;  --ALU gets data from        
+            ex_alu_left_operand <= wb_register_file_write_data;  --ALU gets data from forwarded value (LOAD)    
         end if;  
     end process alu_and_forwarding_left_mux;
------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------[FW MUX2 RIGHT]
     alu_and_forwarding_right_mux: process (
         ex_forward_mux_right_operand, id_ex_reg.control_alu_src, id_ex_reg.register_file_data2, 
         ex_mem_reg.alu_result, id_ex_reg.sign_extended_immediate, wb_register_file_write_data
@@ -490,28 +493,25 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         ex_alu_right_operand <= (others => '0');
         mux_1 := (others => '0');
         
-        if ex_forward_mux_right_operand = FORWARD_NONE then
+        if ex_forward_mux_right_operand = FORWARD_NONE then --ALU gets data from id_ex_reg (previous stage)
             mux_1 := id_ex_reg.register_file_data2;
-        elsif ex_forward_mux_right_operand = FORWARD_EX_MEM then
+        elsif ex_forward_mux_right_operand = FORWARD_EX_MEM then --ALU gets data from ex_mem reg (prev ALU result)
             mux_1 := ex_mem_reg.alu_result;
-        elsif ex_forward_mux_right_operand = FORWARD_MEM_WB then
+        elsif ex_forward_mux_right_operand = FORWARD_MEM_WB then --ALU gets data from forwarded value (LOAD)   
             mux_1 := wb_register_file_write_data;            
         end if; 
         
-        if id_ex_reg.control_alu_src = '0' then        
+        if id_ex_reg.control_alu_src = '0' then --not load, store or addi       
             ex_alu_right_operand <= mux_1;
         else 
-            ex_alu_right_operand <= id_ex_reg.sign_extended_immediate; 
+            ex_alu_right_operand <= id_ex_reg.sign_extended_immediate; --sign extended address or immediate (addi/immediate covered here)
         end if;
         
-        ex_read2_final_data <= mux_1;
+        ex_read2_final_data <= mux_1; --(for store and load)
     end process alu_and_forwarding_right_mux;
     
-    id_read1_final_data <= wb_register_file_write_data when id_forward_mux_r1 else id_register_file_read1_data;
+    id_read1_final_data <= wb_register_file_write_data when id_forward_mux_r1 else id_register_file_read1_data; --get data from input to reg file (forward from load) or read from reg file
     id_read2_final_data <= wb_register_file_write_data when id_forward_mux_r2 else id_register_file_read2_data;
-	
-	
-	id_r1_equals_r2 <= '1' when (id_read1_final_data = id_read2_final_data) else '0'; ----------------------
 	
 	----------------------Branching process
 	branching_decision: process (id_sign_extended_immediate,if_id_reg.pc,id_control_is_branch,id_ex_reg.alu_control,comparator_equal,comparator_less,comparator_great,comparator_less_s,comparator_great_s)
@@ -546,14 +546,33 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	end process;
 	
 	pc_src <= id_control_branch_taken and id_control_is_branch; ---------------BRANCH	
-    ----------------------------------------------
+	
+	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~flushing logic~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	flush_instruction <= pc_src;
+	flush_instruction_process: process(program_read,flush_instruction) is
+	begin
+	
+		if( flush_instruction = '1') then
+			input_instruction <= (others => (others => '0'));
+		else
+			input_instruction <= (
+				program_read(31 downto 25), program_read(24 downto 20), program_read(19 downto 15), 
+				program_read(14 downto 12), program_read(11 downto 7), program_read(6 downto 0)
+			);
+		end if;
+	end process;	
+	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	
+	
+    ---------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     -- Pipeline registers next state logic
     if_id_next <= (
         pc => pc_reg, 
-        instruction => (
-            program_read(31 downto 25), program_read(24 downto 20), program_read(19 downto 15), 
-            program_read(14 downto 12), program_read(11 downto 7), program_read(6 downto 0)
-        )
+		instruction => input_instruction
+        --instruction => (
+          --  program_read(31 downto 25), program_read(24 downto 20), program_read(19 downto 15), 
+           -- program_read(14 downto 12), program_read(11 downto 7), program_read(6 downto 0)
+        --)
     );
 
     id_ex_next <= (
@@ -578,7 +597,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         control_reg_write => id_ex_reg.control_reg_write, 
         control_mem_to_reg => id_ex_reg.control_mem_to_reg,
         alu_result => ex_alu_result, 
-        register_file_data2 => ex_read2_final_data, 
+        register_store_addr => ex_read2_final_data, --
         register_file_rd => id_ex_reg.register_file_rd
     );
         
@@ -589,17 +608,14 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         alu_result => ex_mem_reg.alu_result,
         register_file_rd => ex_mem_reg.register_file_rd
     );
-  
-  
-  ------------------------
+  ---------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
    
-    wb_register_file_write_data <= mem_wb_reg.alu_result when mem_wb_reg.control_mem_to_reg = '0' else mem_wb_reg.memory_data; --LOAD
-    
-    --controls
-   
-    pc <= pc_reg;     
-    data_address <= ex_mem_reg.alu_result(DATA_ADDRESS_WIDTH-1 downto 0);    
-    data_write <= ex_mem_reg.register_file_data2;  --STORE
+    pc <= pc_reg;
+	--input to reg file
+    wb_register_file_write_data <= mem_wb_reg.alu_result when mem_wb_reg.control_mem_to_reg = '0' else mem_wb_reg.memory_data; -- INPUT TO REGFILE. LOAD or REG STORE (alu operation)
+    --input to data memory
+    data_address <= ex_mem_reg.alu_result(DATA_ADDRESS_WIDTH-1 downto 0); --input address to data mem    
+    data_write <= ex_mem_reg.register_store_addr;  --STORE --input data to data mem    
     data_write_en <= ex_mem_reg.control_mem_write;  
     
 end behavioral;

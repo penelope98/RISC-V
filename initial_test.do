@@ -36,7 +36,7 @@ add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_reg_write
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_mem_to_reg
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.alu_result
-add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.register_file_data2
+add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.register_store_addr
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.register_file_rd
 
 add wave -position end -color "Blue" sim:/testbench/sys/cpu/mem_wb_reg.control_reg_write
