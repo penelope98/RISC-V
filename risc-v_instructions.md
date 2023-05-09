@@ -4,16 +4,16 @@ func7, rs2, and rs1 fields are all 5 bits wide, the func3 field is 3 bits wide, 
 
 | inst | func7  | rs2   | rs1 | func3 | rd  | opcode  |
 | ---- | ------ | ----- | --- | ----- | --- | ------- |
-| add  | 000000 | 00000 | rs1 | 000   | rd  | 0011001 |
-| sub  | 010000 | 00000 | rs1 | 000   | rd  | 0011001 |
-| and  | 000000 | rs2   | rs1 | 000   | rd  | 0011001 |
-| sll  | 000000 | rs2   | rs1 | 001   | rd  | 0011001 |
-| slt  | 000000 | rs2   | rs1 | 010   | rd  | 0011001 |
-| sltu | 000000 | rs2   | rs1 | 011   | rd  | 0011001 |
-| xor  | 000000 | rs2   | rs1 | 100   | rd  | 0011001 |
-| srl  | 000000 | rs2   | rs1 | 101   | rd  | 0011001 |
-| sra  | 010000 | rs2   | rs1 | 101   | rd  | 0011001 |
-| or   | 000000 | rs2   | rs1 | 110   | rd  | 0011001 |
+| add  | 000000 | 00000 | rs1 | 000   | rd  | 0011011 |
+| sub  | 010000 | 00000 | rs1 | 000   | rd  | 0011011 |
+| and  | 000000 | rs2   | rs1 | 000   | rd  | 0011011 |
+| sll  | 000000 | rs2   | rs1 | 001   | rd  | 0011011 |
+| slt  | 000000 | rs2   | rs1 | 010   | rd  | 0011011 |
+| sltu | 000000 | rs2   | rs1 | 011   | rd  | 0011011 |
+| xor  | 000000 | rs2   | rs1 | 100   | rd  | 0011011 |
+| srl  | 000000 | rs2   | rs1 | 101   | rd  | 0011011 |
+| sra  | 010000 | rs2   | rs1 | 101   | rd  | 0011011 |
+| or   | 000000 | rs2   | rs1 | 110   | rd  | 0011011 |
 
 
 
@@ -23,21 +23,21 @@ fence.i	12	0	001	0	000111 slti	12	1	010	rd	001001
 
 | Instruction | imm[11:0]   | rs1 | funct3 | rd  | opcode  |
 | ----------- | ----------- | --- | ------ | --- | ------- |
-| addi        | I-immediate | rs1 | 000    | rd  | 0001101 |
-| slli        | shamt[4:0]  | rs1 | 001    | rd  | 0001101 |
-| slti        | I-immediate | rs1 | 010    | rd  | 0001101 |
-| sltiu       | I-immediate | rs1 | 011    | rd  | 0001101 |
-| xori        | I-immediate | rs1 | 100    | rd  | 0001101 |
-| srli        | shamt[4:0]  | rs1 | 101    | rd  | 0001101 |
-| srai        | shamt[4:0]  | rs1 | 101    | rd  | 0001101 |
-| ori         | I-immediate | rs1 | 110    | rd  | 0001101 |
-| andi        | I-immediate | rs1 | 111    | rd  | 0001101 |
+| addi        | I-immediate | rs1 | 000    | rd  | 0010011 |
+| slli        | 0s+sham[4:0]| rs1 | 001    | rd  | 0010011 |
+| slti        | I-immediate | rs1 | 010    | rd  | 0010011 |
+| sltiu       | I-immediate | rs1 | 011    | rd  | 0010011 |
+| xori        | I-immediate | rs1 | 100    | rd  | 0010011 |
+| srli        | 0s+sham[4:0]| rs1 | 101    | rd  | 0010011 |
+| srai        | shamt[4:0]  | rs1 | 101    | rd  | 0010011 |
+| ori         | I-immediate | rs1 | 110    | rd  | 0010011 |
+| andi        | I-immediate | rs1 | 111    | rd  | 0010011 |
 | lb          | I-immediate | rs1 | 000    | rd  | 0000011 |
 | lh          | I-immediate | rs1 | 001    | rd  | 0000011 |
 | lw          | I-immediate | rs1 | 010    | rd  | 0000011 |
 | lbu         | I-immediate | rs1 | 100    | rd  | 0000011 |
 | lhu         | I-immediate | rs1 | 101    | rd  | 0000011 |
-| jalr        | I-immediate | rs1 | 000    | rd  | 1000011 |
+| jalr        | I-immediate | rs1 | 000    | rd  | 1100111 |
 
 
 ### B_type instruction description 
