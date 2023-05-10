@@ -6,7 +6,7 @@ func7, rs2, and rs1 fields are all 5 bits wide, the func3 field is 3 bits wide, 
 | ---- | ------ | ----- | --- | ----- | --- | ------- |
 | add  | 000000 | 00000 | rs1 | 000   | rd  | 0011011 |
 | sub  | 010000 | 00000 | rs1 | 000   | rd  | 0011011 |
-| and  | 000000 | rs2   | rs1 | 000   | rd  | 0011011 |
+| and  | 000000 | rs2   | rs1 | 111   | rd  | 0011011 |
 | sll  | 000000 | rs2   | rs1 | 001   | rd  | 0011011 |
 | slt  | 000000 | rs2   | rs1 | 010   | rd  | 0011011 |
 | sltu | 000000 | rs2   | rs1 | 011   | rd  | 0011011 |
