@@ -64,7 +64,7 @@ architecture behavioral of ph_risc_v is
         register_file_data1: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
         register_file_data2: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
         sign_extended_immediate: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
-        alu_control: std_logic_vector(9 downto 0); --FUNCT7 AND FUNCT3
+        alu_control: std_logic_vector(3 downto 0); -- FUNCT7(5) & FUNCT3
         register_file_rs1: std_logic_vector(REGISTER_FILE_ADDRESS_WIDTH-1 downto 0);
         register_file_rs2: std_logic_vector(REGISTER_FILE_ADDRESS_WIDTH-1 downto 0);
         register_file_rd: std_logic_vector(REGISTER_FILE_ADDRESS_WIDTH-1 downto 0);
@@ -93,12 +93,16 @@ architecture behavioral of ph_risc_v is
     constant FORWARD_MEM_WB: std_logic_vector(1 downto 0) := "10";
         
     function generate_immediate(instruction: instruction_type) return std_logic_vector is
-        type inst_t is (I, S, SB);
+        type inst_t is (I, S,ISHMT, SB);
         variable inst_type: inst_t;
         variable sign_extended_immediate: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
     begin
         if (instruction.opcode(6) = '0' and instruction.opcode(5) = '0') then
-            inst_type := I;
+			if(instruction.funct3 = "001" or instruction.funct3 = "101") then
+				inst_type := ISHMT;
+			else
+				inst_type := I;
+			end if;
         elsif (instruction.opcode(6) = '0' and instruction.opcode(5) = '1') then  
             inst_type := S;  
         else
@@ -108,6 +112,9 @@ architecture behavioral of ph_risc_v is
         if (inst_type = I) then
             sign_extended_immediate := 
                 std_logic_vector(resize(signed(instruction.funct7 & instruction.rs2), sign_extended_immediate'length));
+		elsif (inst_type = ISHMT) then
+			sign_extended_immediate := 
+                std_logic_vector(resize(signed(instruction.rs2), sign_extended_immediate'length));
         elsif (inst_type = S) then
             sign_extended_immediate := 
                 std_logic_vector(resize(signed(instruction.funct7 & instruction.rd), sign_extended_immediate'length));
@@ -366,7 +373,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
    --------------------------------------- 
     control_unit: process (if_id_reg.instruction.opcode) is
         constant R_FORMAT: std_logic_vector(6 downto 0) := "0110011";
-        constant ADDI: std_logic_vector(6 downto 0) := "0010011";
+        constant I_FORMAT: std_logic_vector(6 downto 0) := "0010011";
         constant LOAD: std_logic_vector(6 downto 0) := "0000011";
         constant STORE: std_logic_vector(6 downto 0) := "0100011";
         constant BRANCH: std_logic_vector(6 downto 0) := "1100011";
@@ -383,8 +390,8 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         if if_id_reg.instruction.opcode = R_FORMAT then
             id_control_alu_op <= "10";
             id_control_reg_write <= '1';
-        elsif if_id_reg.instruction.opcode = ADDI then
-            id_control_alu_op <= "10";
+        elsif if_id_reg.instruction.opcode = I_FORMAT then
+            id_control_alu_op <= "11";
             id_control_reg_write <= '1';
             id_control_alu_src <= '1';
         elsif if_id_reg.instruction.opcode = LOAD then
@@ -401,56 +408,78 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         end if;
     end process control_unit;   
 
-    alu_control: process (id_ex_reg.alu_control, id_ex_reg.control_alu_op) is
+    alu_control_process: process (id_ex_reg.alu_control, id_ex_reg.control_alu_op) is
         constant ALU_AND: std_logic_vector(3 downto 0) := "0000"; --and and andi
         constant ALU_OR: std_logic_vector(3 downto 0) := "0001"; --or and ori
         constant ALU_ADD: std_logic_vector(3 downto 0) := "0010"; --add and addi
-        constant ALU_SUB: std_logic_vector(3 downto 0) := "0110"; --sub 
+        constant ALU_SUB: std_logic_vector(3 downto 0) := "0011"; --sub 
 		
 		constant ALU_XOR: std_logic_vector(3 downto 0) := "0100"; --xor and xori
 		constant ALU_SLL: std_logic_vector(3 downto 0) := "0101"; --sll and slli
-		constant ALU_SRL: std_logic_vector(3 downto 0) := "0011"; -- srl srli
+		constant ALU_SRL: std_logic_vector(3 downto 0) := "0110"; -- srl srli
 		
 		constant ALU_SRA: std_logic_vector(3 downto 0) := "0111"; -- sra and srai
 		constant ALU_SLTU: std_logic_vector(3 downto 0) := "1000"; -- sltu and sltiu
-		constant ALU_SLTI: std_logic_vector(3 downto 0) := "1001"; -- slti and slt
+		constant ALU_SLT: std_logic_vector(3 downto 0) := "1001"; -- slti and slt
 		
 		
 		
-    begin    
-        ex_alu_control <= ALU_AND;
-             
-        if id_ex_reg.control_alu_op = "00" then
-            ex_alu_control <= ALU_ADD;
-        elsif id_ex_reg.control_alu_op = "01" then --?
-            ex_alu_control <= ALU_SUB;
-			
-        elsif id_ex_reg.alu_control = "0000000000" then -----------ADD
-            ex_alu_control <= ALU_ADD;
-        elsif id_ex_reg.alu_control = "0100000000" then -----------SUB
-            ex_alu_control <= ALU_SUB;       
-        elsif id_ex_reg.alu_control = "0000000111" then -----------AND
-            ex_alu_control <= ALU_AND;
-        elsif id_ex_reg.alu_control = "0000000110" then -----------OR
-            ex_alu_control <= ALU_OR;  
-			
-		elsif id_ex_reg.alu_control = "0000000100" then -- XOR
-			ex_alu_control <= ALU_XOR;			
-		elsif id_ex_reg.alu_control = "0000000001" then -- SLL
-			ex_alu_control <= ALU_SLL;
-		elsif id_ex_reg.alu_control = "0000000101" then -- SRL
-			ex_alu_control <= ALU_SRL;
-
-		elsif id_ex_reg.alu_control = "0100000101" then -- SRA
-			ex_alu_control <= ALU_SRA;
-		elsif id_ex_reg.alu_control = "0000000011" then -- SLTU AND SLTIU
-			ex_alu_control <= ALU_SLTU;
-		elsif id_ex_reg.alu_control = "0000000010" then -- SLTI
-			ex_alu_control <= ALU_SLTI;
-								
-			
-        end if;
-    end process alu_control;
+    begin 
+	
+        ex_alu_control <= ALU_AND; 
+		if id_ex_reg.control_alu_op = "10" then 	
+			if(id_ex_reg.alu_control = "0000") then 
+				ex_alu_control <= ALU_ADD;
+			elsif(id_ex_reg.alu_control = "1000") then
+				ex_alu_control <= ALU_SUB;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "001") then
+				ex_alu_control <= ALU_SLL;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "010") then
+				ex_alu_control <=ALU_SLT;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "011") then
+				ex_alu_control <= ALU_SLTU;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "100") then
+				ex_alu_control <= ALU_XOR;
+			elsif(id_ex_reg.alu_control = "0101") then
+				ex_alu_control <= ALU_SRL;
+			elsif(id_ex_reg.alu_control = "1101") then
+				ex_alu_control <= ALU_SRA;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "110") then
+				ex_alu_control <= ALU_OR;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "111") then
+				ex_alu_control <= ALU_AND;
+			else
+				ex_alu_control <= ALU_AND;			
+			end if;
+		
+		
+		elsif id_ex_reg.control_alu_op = "11" then 	
+			if(id_ex_reg.alu_control(2 downto 0) = "000") then 
+				ex_alu_control <= ALU_ADD;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "001") then
+				ex_alu_control <= ALU_SLL;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "010") then
+				ex_alu_control <= ALU_SLT;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "011") then
+				ex_alu_control <= ALU_SLTU;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "100") then
+				ex_alu_control <= ALU_XOR;
+			elsif(id_ex_reg.alu_control = "0101") then
+				ex_alu_control <= ALU_SRL;
+			elsif(id_ex_reg.alu_control = "1101") then
+				ex_alu_control <= ALU_SRA;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "110") then
+				ex_alu_control <= ALU_OR;
+			elsif(id_ex_reg.alu_control(2 downto 0) = "111") then
+				ex_alu_control <= ALU_AND;
+			else
+				ex_alu_control <= ALU_AND;			
+			end if;	
+		else
+			 ex_alu_control <= ALU_AND; 
+		end if;
+	
+    end process alu_control_process;
  ----------------------------------------------------------------------------------- forwarding function }}}}}}}}}}}}}}}}}}
     forward_controls <= control_forwarding(
         ex_mem_reg_write => ex_mem_reg.control_reg_write,
@@ -514,7 +543,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     id_read2_final_data <= wb_register_file_write_data when id_forward_mux_r2 else id_register_file_read2_data;
 	
 	----------------------Branching process
-	branching_decision: process (id_sign_extended_immediate,if_id_reg.pc,id_control_is_branch,id_ex_reg.alu_control,comparator_equal,comparator_less,comparator_great,comparator_less_s,comparator_great_s)
+	branching_decision: process (id_sign_extended_immediate,if_id_reg.pc,id_control_is_branch,comparator_equal,comparator_less,comparator_great,comparator_less_s,comparator_great_s)
 	
 	    constant BEQ: std_logic_vector(2 downto 0) := "000"; 
         constant BNE: std_logic_vector(2 downto 0) := "001";
@@ -585,7 +614,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         register_file_data1 => id_read1_final_data, 
         register_file_data2 => id_read2_final_data, 
         sign_extended_immediate => id_sign_extended_immediate, 
-        alu_control => if_id_reg.instruction.funct7 & if_id_reg.instruction.funct3, ---MERGED FUNCT7 AND FUCNT3
+        alu_control => if_id_reg.instruction.funct7(5) & if_id_reg.instruction.funct3, -- FUNCT7(5) & FUNCT3
         register_file_rs1 => if_id_reg.instruction.rs1,
         register_file_rs2 => if_id_reg.instruction.rs2,
         register_file_rd => if_id_reg.instruction.rd

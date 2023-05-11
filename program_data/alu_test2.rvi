@@ -1,0 +1,31 @@
+addi $2, $0, 2              
+addi $3, $0, 16              	
+addi $4, $0, 3
+addi $1, $0, 1 
+addi $5, $0, -2              
+addi $6, $0, -3              	
+addi $7, $0, -4
+add $0, $0, $0              
+add $0, $0, $0
+add $0, $0, $0
+add $0, $0, $0
+sll $8, $2, $2 #left shift . should give 8
+slli $8, $2, 3 #should give 16
+sll $8, $5, $3 
+srl $8, $3, $2 #right shift logical . should give 4
+srli $8, $3, 2 #should give 4
+srl $8, $5, $3
+sra $8, $4, $2 #right shift arithmetic 
+srai $8, $4, 3
+srai $8, $5, 2
+slt $8, $6, $4 #set less than signed. should give 1
+slti $8, $6, 3 #should give 1
+slti $8, $4, 3 #should give 0
+sltu $8, $6, $4 #set less than unsigned. should give 0
+sltiu $8, $6, 3 #should give 0
+sltiu $8, $2, 3 #should give 1
+add $0, $0, $0              
+add $0, $0, $0
+add $0, $0, $0
+add $0, $0, $0
+add $0, $0, $0

@@ -31,6 +31,12 @@ add wave -position end -color "Cyan" sim:/testbench/sys/cpu/id_ex_reg.register_f
 add wave -position end -color "Cyan" sim:/testbench/sys/cpu/id_ex_reg.register_file_rd
 add wave -position end -color "Blue" -radix "Unsigned" sim:/testbench/sys/cpu/id_branch_address
 
+add wave -position end -color "Thistle" sim:/testbench/sys/cpu/ex_alu_control
+add wave -position end -color "Thistle" -radix "Decimal" sim:/testbench/sys/cpu/ex_alu_left_operand
+add wave -position end -color "Thistle" -radix "Decimal" sim:/testbench/sys/cpu/ex_alu_right_operand
+add wave -position end -color "Thistle" -radix "Decimal" sim:/testbench/sys/cpu/ex_alu_result
+add wave -position end  -radix "Decimal" sim:/testbench/sys/cpu/alu_unit/alu_result
+add wave -position end  -radix "Decimal" sim:/testbench/sys/cpu/alu_unit/abs_left
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_mem_read
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_mem_write
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_reg_write
