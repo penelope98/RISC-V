@@ -73,8 +73,11 @@ begin
 				else
 					alu_result(0) <= '0';
 				end if;	
+			when "1010" => --LUI
+                alu_result <= right_operand;
 			when others =>
 				alu_result <= ( others => '0');
+
         end case;
     end process;
 

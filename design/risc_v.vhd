@@ -93,9 +93,10 @@ architecture behavioral of ph_risc_v is
     constant FORWARD_MEM_WB: std_logic_vector(1 downto 0) := "10";
         
     function generate_immediate(instruction: instruction_type) return std_logic_vector is
-        type inst_t is (I, S,ISHMT, SB);
+        type inst_t is (I, S,ISHMT, SB, U);
         variable inst_type: inst_t;
         variable sign_extended_immediate: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
+		variable zero_fill : std_logic_vector(CPU_DATA_WIDTH-21 downto 0) := ( others=>'0');
     begin
         if (instruction.opcode(6) = '0' and instruction.opcode(5) = '0') then
 			if(instruction.funct3 = "001" or instruction.funct3 = "101") then
@@ -103,8 +104,13 @@ architecture behavioral of ph_risc_v is
 			else
 				inst_type := I;
 			end if;
-        elsif (instruction.opcode(6) = '0' and instruction.opcode(5) = '1') then  
-            inst_type := S;  
+		
+        elsif (instruction.opcode(6) = '0' and instruction.opcode(5) = '1') then
+			if( instruction.opcode(2) = '0' ) then 
+				inst_type := S;  
+			else
+				inst_type := U;  
+			end if;
         else
             inst_type := SB; 
         end if;
@@ -114,13 +120,16 @@ architecture behavioral of ph_risc_v is
                 std_logic_vector(resize(signed(instruction.funct7 & instruction.rs2), sign_extended_immediate'length));
 		elsif (inst_type = ISHMT) then
 			sign_extended_immediate := 
-                std_logic_vector(resize(signed(instruction.rs2), sign_extended_immediate'length));
+                std_logic_vector(resize(unsigned(instruction.rs2), sign_extended_immediate'length));
         elsif (inst_type = S) then
             sign_extended_immediate := 
-                std_logic_vector(resize(signed(instruction.funct7 & instruction.rd), sign_extended_immediate'length));
+                std_logic_vector(resize(unsigned(instruction.funct7 & instruction.rd), sign_extended_immediate'length));
+		elsif (inst_type = U) then
+            sign_extended_immediate := 
+                instruction.funct7 & instruction.rs2 & instruction.rs1 & instruction.funct3 & zero_fill;
         else
             sign_extended_immediate := 
-                std_logic_vector(resize(signed((
+                std_logic_vector(resize(unsigned((
                     instruction.funct7(6) & instruction.rd(0) & 
                     instruction.funct7(5 downto 0) & instruction.rd(4 downto 1))), sign_extended_immediate'length
                 ));
@@ -374,6 +383,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     control_unit: process (if_id_reg.instruction.opcode) is
         constant R_FORMAT: std_logic_vector(6 downto 0) := "0110011";
         constant I_FORMAT: std_logic_vector(6 downto 0) := "0010011";
+		constant U_FORMAT: std_logic_vector(6 downto 0) := "0110111";
         constant LOAD: std_logic_vector(6 downto 0) := "0000011";
         constant STORE: std_logic_vector(6 downto 0) := "0100011";
         constant BRANCH: std_logic_vector(6 downto 0) := "1100011";
@@ -392,6 +402,10 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
             id_control_reg_write <= '1';
         elsif if_id_reg.instruction.opcode = I_FORMAT then
             id_control_alu_op <= "11";
+            id_control_reg_write <= '1';
+            id_control_alu_src <= '1';
+		elsif if_id_reg.instruction.opcode = U_FORMAT then
+			id_control_alu_op <= "01";
             id_control_reg_write <= '1';
             id_control_alu_src <= '1';
         elsif if_id_reg.instruction.opcode = LOAD then
@@ -422,11 +436,9 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 		constant ALU_SLTU: std_logic_vector(3 downto 0) := "1000"; -- sltu and sltiu
 		constant ALU_SLT: std_logic_vector(3 downto 0) := "1001"; -- slti and slt
 		
-		
-		
+		constant ALU_LUI: std_logic_vector(3 downto 0) := "1010"; -- lui	
     begin 
 	
-        ex_alu_control <= ALU_AND; 
 		if id_ex_reg.control_alu_op = "10" then 	
 			if(id_ex_reg.alu_control = "0000") then 
 				ex_alu_control <= ALU_ADD;
@@ -475,8 +487,11 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 			else
 				ex_alu_control <= ALU_AND;			
 			end if;	
+			
+		elsif id_ex_reg.control_alu_op = "01" then 	
+				ex_alu_control <= ALU_LUI;	
 		else
-			 ex_alu_control <= ALU_AND; 
+			 ex_alu_control <= ALU_LUI; 
 		end if;
 	
     end process alu_control_process;
