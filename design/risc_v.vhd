@@ -245,6 +245,7 @@ architecture behavioral of ph_risc_v is
     signal forward_controls: forward_control_type;
 	---COMPRESSED MODE
 	signal pc_cmp: std_logic;
+	signal expanded_instruction: std_logic_vector(31 downto 0);
 	
 	--additional>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	signal comparator_great,comparator_less,comparator_equal,comparator_great_s,comparator_less_s,comparator_equal_s: std_logic;
@@ -378,6 +379,52 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	
 	end process;
 	--------------------------------------
+	if_cmp_logic: process (program_read, pc_cmp)
+	begin
+
+		if program_read (1 downto 0) = "00" then
+			if program_read(15 downto 13) = "010" then --C.LW
+				expanded_instruction <= "00000" & program_read(5) & program_read(12 downto 10) & program_read(6) & "0000" & program_read(9 downto 7) & program_read(15 downto 13) & "00" & program_read(4 downto 2) & "0000011";
+			elsif program_read(15 downto 13) = "110" then --C.SW
+				expanded_instruction <= "00000" & program_read(5) & program_read(12) & "00" & program_read(4 downto 2) & "00" & program_read(9 downto 7) & program_read(15 downto 13) & program_read(11 downto 10) & program_read(6) & "00" & "0100011";
+			end if;
+		elsif program_read (1 downto 0) = "10" then
+			if program_read(15 downto 13) = "000" then --C.SLLI
+				expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2) & program_read(11 downto 7) & "001" & program_read(11 downto 7) & "0010011";
+			elsif program_read(15 downto 13) = "100" then --C.ADD
+				expanded_instruction <= "0000000" & program_read(6 downto 2) & program_read(11 downto 7) & "000" & program_read(11 downto 7) &"0110011";
+			end if;
+		elsif program_read (1 downto 0) = "01" then
+			if program_read(15 downto 13) = "000" then --C.ADDI
+				expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2) & program_read(11 downto 7) & "000" & program_read(11 downto 7) & "0010011"; 
+			elsif program_read(15 downto 13) = "010" then --C.LI
+				expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2)& program_read(11 downto 7) & "00000000" & "0010011"; 
+			elsif program_read(15 downto 13) = "011" then --C.LUI
+				expanded_instruction <= "00000000000000" & program_read(12) & program_read(6 downto 2) & program_read(11 downto 7) &"0110111";
+			elsif program_read(15 downto 13) = "100" then 
+				if program_read(11 downto 10) = "00" then --C.SRLI
+					expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2) 
+					& program_read(11 downto 7) & "101" & program_read(11 downto 7) &"0010011";
+ 				elsif program_read(11 downto 10) = "01" then --C.SRAI
+					expanded_instruction <= "0100000" & program_read(12) & program_read(6 downto 2) & "00" & program_read(9 downto 7) & "10100" & program_read(9 downto 7) &"0010011";
+				elsif program_read(11 downto 10) = "10" then --C.ANDI
+					expanded_instruction <= "0000000" & program_read(12) & program_read(6 downto 2) & "00" & program_read(9 downto 7) & "11100" & program_read(9 downto 7) & "0010011"; 
+				else 
+				 	if program_read(6 downto 5) = "00" then --C.SUB
+						expanded_instruction <= "0100000" & program_read(6 downto 2) &"00" & program_read(9 downto 7) & "00000" & program_read(9 downto 7) &"0110011";
+					elsif program_read(6 downto 5) = "01" then --C.XOR
+						expanded_instruction <= "0000000" & "00" & program_read(4 downto 2) & program_read(9 downto 7) & "111" & program_read(9 downto 7) &"0110011"; 
+					elsif program_read(6 downto 5) = "10" then --C.OR
+						expanded_instruction <= "0000000" & "00" & program_read(4 downto 2) & "00" & program_read(9 downto 7) & "110" & program_read(9 downto 7) &"0110011"; 
+					else --C.AND
+						expanded_instruction <= "0000000" & "00" & program_read(4 downto 2) & "00" & program_read(9 downto 7) & "11100" & program_read(9 downto 7) & "0110011"; 
+					end if;
+				end if;
+			end if;
+		end if;
+
+	end process;
+	--------------------------------------
     id_sign_extended_immediate <= generate_immediate(if_id_reg.instruction);	
    --------------------------------------- 
     control_unit: process (if_id_reg.instruction.opcode) is
@@ -387,6 +434,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         constant LOAD: std_logic_vector(6 downto 0) := "0000011";
         constant STORE: std_logic_vector(6 downto 0) := "0100011";
         constant BRANCH: std_logic_vector(6 downto 0) := "1100011";
+	
 
     begin
         id_control_alu_op <= "00";
@@ -593,11 +641,19 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	
 	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~flushing logic~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	flush_instruction <= pc_src;
-	flush_instruction_process: process(program_read,flush_instruction) is
+
+	flush_instruction_process: process(program_read,flush_instruction,expanded_instruction) is
 	begin
 	
 		if( flush_instruction = '1') then
 			input_instruction <= (others => (others => '0'));
+
+		elsif( pc_cmp= '1') then
+			input_instruction <= (
+				expanded_instruction(31 downto 25), expanded_instruction(24 downto 20), expanded_instruction(19 downto 15), 
+				expanded_instruction(14 downto 12), expanded_instruction(11 downto 7), expanded_instruction(6 downto 0)
+			);
+
 		else
 			input_instruction <= (
 				program_read(31 downto 25), program_read(24 downto 20), program_read(19 downto 15), 
