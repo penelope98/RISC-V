@@ -243,9 +243,12 @@ architecture behavioral of ph_risc_v is
     -- control>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     signal pc_src: std_logic;
     signal forward_controls: forward_control_type;
-	---COMPRESSED MODE
+--COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	
 	signal pc_cmp: std_logic;
 	signal expanded_instruction: std_logic_vector(31 downto 0);
+	
+--COMPRESSED MODE end<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	
 	--additional>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	signal comparator_great,comparator_less,comparator_equal,comparator_great_s,comparator_less_s,comparator_equal_s: std_logic;
@@ -367,6 +370,8 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
             pc_next <= id_branch_address;
         end if;
     end process next_pc_logic;
+	
+--COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<	
     --------------------------------------
 	compressed_detect: process(program_read) is
 	begin
@@ -424,6 +429,9 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 		end if;
 
 	end process;
+	
+--COMPRESSED MODE end<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<COMPRESSED MODE end<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 	--------------------------------------
     id_sign_extended_immediate <= generate_immediate(if_id_reg.instruction);	
    --------------------------------------- 
