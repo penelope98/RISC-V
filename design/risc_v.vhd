@@ -22,6 +22,7 @@ entity risc_v is
     port(
         clk: in std_logic;
         reset_n: in std_logic;
+        b_Enter: in std_logic;
         program_read: in std_logic_vector(INSTRUCTION_WIDTH-1 downto 0);
         pc: out std_logic_vector(PROGRAM_ADDRESS_WIDTH-1 downto 0);
         data_address: out std_logic_vector(DATA_ADDRESS_WIDTH-1 downto 0);
@@ -306,6 +307,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         port map (
             clk => clk,
             reset_n => reset_n,
+            b_Enter => b_Enter,
             write_en => mem_wb_reg.control_reg_write,
             read1_id => if_id_reg.instruction.rs1,
             read2_id => if_id_reg.instruction.rs2,
@@ -386,7 +388,8 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	--------------------------------------
 	if_cmp_logic: process (program_read, pc_cmp)
 	begin
-
+    expanded_instruction <= (others => '0');
+    
 		if program_read (1 downto 0) = "00" then
 			if program_read(15 downto 13) = "010" then --C.LW
 				expanded_instruction <= "00000" & program_read(5) & program_read(12 downto 10) & program_read(6) & "0000" & program_read(9 downto 7) & program_read(15 downto 13) & "00" & program_read(4 downto 2) & "0000011";
@@ -615,7 +618,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     id_read2_final_data <= wb_register_file_write_data when id_forward_mux_r2 else id_register_file_read2_data;
 	
 	----------------------Branching process
-	branching_decision: process (id_sign_extended_immediate,if_id_reg.pc,id_control_is_branch,comparator_equal,comparator_less,comparator_great,comparator_less_s,comparator_great_s)
+	branching_decision: process (id_sign_extended_immediate,if_id_reg.pc,id_control_is_branch,comparator_equal,comparator_less,comparator_great,comparator_less_s,comparator_great_s,id_sign_extended_immediate_shifted_1)
 	
 	    constant BEQ: std_logic_vector(2 downto 0) := "000"; 
         constant BNE: std_logic_vector(2 downto 0) := "001";
@@ -651,7 +654,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~flushing logic~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	flush_instruction <= pc_src;
 
-	flush_instruction_process: process(program_read,flush_instruction,expanded_instruction) is
+	flush_instruction_process: process(program_read,flush_instruction,expanded_instruction,pc_cmp) is
 	begin
 	
 		if( flush_instruction = '1') then

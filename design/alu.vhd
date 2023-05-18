@@ -40,7 +40,7 @@ begin
 		generic map ( DATA_WIDTH => DATA_WIDTH )    
 		port map( original=>left_operand, absolute => abs_left);
 	
-    process(control, left_operand, right_operand)
+    process(control, left_operand, right_operand, abs_left)
     begin
         case control is
             when "0000" => --AND

@@ -15,7 +15,9 @@ entity system_serial is
     port (
         clk: in std_logic;
         reset_n: in std_logic;
-		input_data: in std_logic
+        b_Enter: in std_logic;
+		input_data: in std_logic;
+		output_led: out std_logic
     );
 end system_serial;
 
@@ -76,6 +78,7 @@ begin
         port map (
             clk => clk,
             reset_n => reset_n,
+            b_Enter => b_Enter,
             program_read => program_data,
             pc => program_counter,
             data_address => data_address,
@@ -119,7 +122,7 @@ begin
             instr_fill_count <= (others => '0');
 			new_instr_reg <= (others => '0');
 			instruction_assembled_reg <= (others => '0');
-		else
+		elsif rising_edge(clk) then 
 			system_state <= system_state_next;
             instr_fill_count <= instr_fill_count_next;
 			new_instr_reg <= new_instr_next;
@@ -129,7 +132,7 @@ begin
 	end process;
 	
 	
-	character_decode: process( new_char, char_get) is
+	character_decode: process( new_char, char_get, new_instr_reg) is
 	begin
 		if( new_char = "00110000" and char_get = '1' ) then 
 			new_instr_next <= '0' & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
@@ -164,13 +167,14 @@ begin
 	
 --------------------------INSTR READ PROCESS end---------------------------------------INSTR READ PROCESS end------------------------------------INSTR READ PROCESS end-------------------------
 	
-	SYSTEM_FSM: process(instr_get,system_state,eot)is
+	SYSTEM_FSM: process(instr_get,system_state,eot,program_counter,instr_fill_count)is
 	begin
 
 
 		ram_write_enable <='0';
 		program_address <= program_counter;
 		instr_fill_count_next <= instr_fill_count;
+		system_state_next <= system_state;
 		
 		case system_state is			
 			when fill_ram =>	
@@ -192,7 +196,7 @@ begin
 		
 	end process;
 	
-	
+	output_led <= eot;
     -- Just added to force the tools not to optimize away the logic
    -- process (clk)
         --variable red: std_logic := '0';

@@ -18,7 +18,8 @@ entity register_file is
         write_id: in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
         write_data: in std_logic_vector(DATA_WIDTH-1 downto 0);
         read1_data: out std_logic_vector(DATA_WIDTH-1 downto 0);
-        read2_data: out std_logic_vector(DATA_WIDTH-1 downto 0)
+        read2_data: out std_logic_vector(DATA_WIDTH-1 downto 0);
+        b_Enter: in std_logic
     );
 end register_file;
 

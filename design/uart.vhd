@@ -45,7 +45,7 @@ architecture uart_arch of uart is
             char_reg <= (others => '0');
             cycle_count <= (others => '0');
             data_bit_count <= (others => '0');	
-		else
+		elsif rising_edge(clk) then
 			uart_state <= uart_state_next;
             char_reg <= char_next;
             cycle_count <= cycle_count_next;
@@ -104,6 +104,14 @@ architecture uart_arch of uart is
 					end_of_transmission <='1';
 					
                  end if;
+                 
+            when others =>
+                uart_state_next <= uart_state;
+                cycle_count_next <= cycle_count;
+                char_next <= char_reg;
+                data_bit_count_next <= data_bit_count;
+                char_flag <= '0';
+                end_of_transmission <='0';
                                       
         end case;
     end process;
