@@ -417,11 +417,11 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 					expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2) & "00" & program_read(9 downto 7) & "11100" & program_read(9 downto 7) & "0010011"; 
 				else 
 				 	if program_read(6 downto 5) = "00" then --C.SUB
-						expanded_instruction <= "0100000" & program_read(6 downto 2) &"00" & program_read(9 downto 7) & "00000" & program_read(9 downto 7) &"0110011";
+						expanded_instruction <= "0100000" & program_read(6 downto 2) & "00" & program_read(9 downto 7) & "00000" & program_read(9 downto 7) & "0110011";
 					elsif program_read(6 downto 5) = "01" then --C.XOR
-						expanded_instruction <= "0000000" & "00" & program_read(4 downto 2) & program_read(9 downto 7) & "111" & program_read(9 downto 7) &"0110011"; 
+						expanded_instruction <= "0000000" & "00" & program_read(4 downto 2) & "00" & program_read(9 downto 7) & "11100" & program_read(9 downto 7) & "0110011"; 
 					elsif program_read(6 downto 5) = "10" then --C.OR
-						expanded_instruction <= "0000000" & "00" & program_read(4 downto 2) & "00" & program_read(9 downto 7) & "110" & program_read(9 downto 7) &"0110011"; 
+						expanded_instruction <= "0000000" & "00" & program_read(4 downto 2) & "00" & program_read(9 downto 7) & "11000" & program_read(9 downto 7) & "0110011"; 
 					else --C.AND
 						expanded_instruction <= "0000000" & "00" & program_read(4 downto 2) & "00" & program_read(9 downto 7) & "11100" & program_read(9 downto 7) & "0110011"; 
 					end if;
