@@ -34,7 +34,7 @@ architecture uart_arch of uart is
     signal cycle_count, cycle_count_next: unsigned(16 downto 0); --highest baudrate in uart: 115200 : 0001 1100 0010 0000 0000
     signal data_bit_count, data_bit_count_next: unsigned(CHARACTER_SIZE-1 downto 0);
     
-    signal char_next,char_reg: std_logic_vector (31 downto 0) ;
+    signal char_next,char_reg: std_logic_vector (CHARACTER_SIZE-1 downto 0) ;
     
     begin 
 	

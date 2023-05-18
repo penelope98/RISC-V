@@ -11,7 +11,7 @@ use work.common.all;
 
 -------------------
 
-entity ph_risc_v is    
+entity risc_v is    
     generic(
         PROGRAM_ADDRESS_WIDTH: natural := 6;
         DATA_ADDRESS_WIDTH: natural := 6;
@@ -29,9 +29,9 @@ entity ph_risc_v is
         data_write_en: out std_logic;
         data_write: out std_logic_vector(CPU_DATA_WIDTH-1 downto 0) 
     );        
-end ph_risc_v;
+end risc_v;
 
-architecture behavioral of ph_risc_v is
+architecture behavioral of risc_v is
 
     type forward_control_type is record
         ex_forward_mux_left_operand: std_logic_vector(1 downto 0);
