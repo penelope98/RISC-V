@@ -11,8 +11,7 @@ port(
     reset: in std_logic;
     rx: in std_logic;
     char_out: out std_logic_vector(CHARACTER_SIZE-1 downto 0);
-	char_flag: out std_logic;
-	end_of_transmission: out std_logic
+	char_flag: out std_logic
 );
 end uart;
 
@@ -35,21 +34,31 @@ architecture uart_arch of uart is
     signal data_bit_count, data_bit_count_next: unsigned(CHARACTER_SIZE-1 downto 0);
     
     signal char_next,char_reg: std_logic_vector (CHARACTER_SIZE-1 downto 0) ;
+    signal uart_bin: std_logic_vector(2 downto 0);
+    
+    -- component ila_0 port(
+      --  clk: in std_logic;
+       -- probe0: in std_logic_vector(0 downto 0);
+        --probe1: in std_logic_vector(2 downto 0) );
+   -- end component;
+    
     
     begin 
 	
-	sequential_process: process(clk,reset) is
+	sequential_process: process(clk) is
 	begin
-		if( reset = '1' ) then
-			uart_state <= standby;
-            char_reg <= (others => '0');
-            cycle_count <= (others => '0');
-            data_bit_count <= (others => '0');	
-		elsif rising_edge(clk) then
-			uart_state <= uart_state_next;
-            char_reg <= char_next;
-            cycle_count <= cycle_count_next;
-            data_bit_count <= data_bit_count_next;
+		if rising_edge(clk) then
+			if( reset = '0' ) then
+				uart_state <= standby;
+				char_reg <= (others => '0');
+				cycle_count <= (others => '0');
+				data_bit_count <= (others => '0');	
+			else 
+				uart_state <= uart_state_next;
+				char_reg <= char_next;
+				cycle_count <= cycle_count_next;
+				data_bit_count <= data_bit_count_next;
+			end if;
 		end if;
 	end process;
 	
@@ -62,8 +71,7 @@ architecture uart_arch of uart is
         char_next <= char_reg;
         data_bit_count_next <= data_bit_count;
 		char_flag <= '0';
-		end_of_transmission <='0';
-        
+      
         case uart_state is
             when standby =>
                 if (rx = '0') then 
@@ -88,7 +96,6 @@ architecture uart_arch of uart is
                 char_next <= rx & char_reg(CHARACTER_SIZE-1 downto 1); --get new bit and add to char
                 data_bit_count_next <= data_bit_count + 1;
                 if( data_bit_count = CHARACTER_SIZE ) then
-					char_flag <= '1';
                     uart_state_next <= wait_full_last_bit;
                 else
                     uart_state_next <= wait_full_data_bit;
@@ -96,12 +103,11 @@ architecture uart_arch of uart is
                            
             when wait_full_last_bit =>            
                 cycle_count_next <= cycle_count + 1;
-				
+				char_flag <= '1';
                 if (cycle_count = BAUD_COUNT_CHECK) then 
                     uart_state_next <= standby;
                     data_bit_count_next <= (others => '0');
                     cycle_count_next <= (others => '0'); 
-					end_of_transmission <='1';
 					
                  end if;
                  
@@ -111,13 +117,32 @@ architecture uart_arch of uart is
                 char_next <= char_reg;
                 data_bit_count_next <= data_bit_count;
                 char_flag <= '0';
-                end_of_transmission <='0';
                                       
         end case;
     end process;
 	
 	char_out<= char_reg;
 	
+	--process(uart_state) is
+	--begin
+	  -- case(uart_state) is
+         --   when standby =>
+          --      uart_bin<="000";
+          --  when wait_half_start_bit => 
+           --     uart_bin<="001";
+          --  when wait_full_data_bit =>
+                --uart_bin<="010";
+          --- when capture_data_bit => 
+           --     uart_bin<="011";
+          --  when wait_full_last_bit =>            
+           --     uart_bin<="100";
+          --  when others =>
+           --     uart_bin<="111";
+	  -- end case;
 	
+	--end process;
+	
+	
+	--ILA_UART: ila_0 port map(clk=>clk,probe0(0)=>rx,probe1=>uart_bin);
 
 end uart_arch;

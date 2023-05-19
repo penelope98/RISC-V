@@ -29,6 +29,7 @@ architecture behavioral of register_file is
 
     type register_array is array (0 to REGISTER_FILE_SIZE-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
     signal registers: register_array := ( others => (others => '0'));
+   
     
 begin
 

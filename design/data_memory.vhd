@@ -11,6 +11,7 @@ entity data_memory is
     
     port (
         clk: in std_logic;
+		reset: in std_logic;
         write_en: in std_logic;
         write_data: in std_logic_vector(DATA_WIDTH-1 downto 0);
         address: in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
@@ -32,7 +33,10 @@ begin
     data_ram: process (clk) is
     begin
         if rising_edge(clk) then
-            if write_en = '1' then
+		
+			if reset = '0' then
+				ram <= (others=> (others=>'0'));
+            elsif write_en = '1' then
                 ram(to_integer(unsigned(address))) <= write_data;
             end if;
         end if;

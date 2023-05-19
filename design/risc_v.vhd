@@ -283,7 +283,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     registers: process (clk) is
     begin
         if rising_edge(clk) then
-            if reset_n = '0' then
+            if reset_n = '1' then
                 pc_reg <= (others => '0');
                 if_id_reg <= (instruction => (others => (others => '0')), others => (others => '0'));               
                 id_ex_reg <= ("00", '0', '0', '0', '0', '0', others => (others => '0'));

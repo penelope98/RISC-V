@@ -49,9 +49,20 @@ architecture structural of system_serial is
 	signal new_char: std_logic_vector(CHARACTER_SIZE-1 downto 0); --new char from uart
 	
 	signal ram_write_enable: std_logic;
-	signal eot: std_logic; --signals the end of instruction read from uart
+	signal eot,risc_reset: std_logic; --signals the end of instruction read from uart
+	signal force_reset: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
 
 	--==--==--==--==--==--==--==--==--==--==-signals for uart-==--==--==--==--==--==--==--==--==--==--
+
+    component ila_regs port(
+        clk: in std_logic;
+        probe0: in std_logic_vector(31 downto 0);
+        probe1: in std_logic_vector(0 downto 0); 
+        probe2: in std_logic_vector(0 downto 0) );
+    end component;
+
+
+
 
 begin
 
@@ -64,8 +75,7 @@ begin
 			reset=>reset_n,
 			rx=>input_data,
 			char_out=>new_char,
-			char_flag=>char_get,
-			end_of_transmission=>eot
+			char_flag=>char_get
 		);
 
     cpu: entity work.risc_v 
@@ -77,7 +87,7 @@ begin
         )
         port map (
             clk => clk,
-            reset_n => reset_n,
+            reset_n => risc_reset,
             b_Enter => b_Enter,
             program_read => program_data,
             pc => program_counter,
@@ -94,6 +104,7 @@ begin
             )    
         port map (
             clk => clk,
+			reset => reset_n,
             write_en => ram_write_enable,
             write_data => new_instr,
             address => program_address,
@@ -107,6 +118,7 @@ begin
         )
         port map (
             clk => clk,
+			reset => reset_n,
             write_en => data_write_en,
             write_data => data_write,
             address => data_address,
@@ -115,18 +127,30 @@ begin
     
 	--------------------------INSTR READ PROCESS ---------------------------------------INSTR READ PROCESS ------------------------------------INSTR READ PROCESS -------------------------
 	
-	REG: process(clk,reset_n) is
-	begin
-		if( reset_n = '1' ) then
-			system_state <= fill_ram;
-            instr_fill_count <= (others => '0');
-			new_instr_reg <= (others => '0');
-			instruction_assembled_reg <= (others => '0');
-		elsif rising_edge(clk) then 
-			system_state <= system_state_next;
-            instr_fill_count <= instr_fill_count_next;
-			new_instr_reg <= new_instr_next;
-			instruction_assembled_reg <= instruction_assembled_next;
+	--CALCULATE--
+	risc_reset <= (not reset_n) or force_reset(CPU_DATA_WIDTH-1);
+	force_reset(0) <= new_instr(0);
+	
+	
+	FORCE_RESET_BITAND : for I in 1 to CPU_DATA_WIDTH-1 generate
+	force_reset(I)<= force_reset(I-1) and new_instr(I);
+	end generate;
+
+	
+	REG: process(clk) is
+	begin		
+		if rising_edge(clk) then 
+			if( reset_n = '0' ) then
+				system_state <= fill_ram;
+				instr_fill_count <= (others => '0');
+				new_instr_reg <= (others => '0');
+				instruction_assembled_reg <= (others => '0');
+			else 
+				system_state <= system_state_next;
+				instr_fill_count <= instr_fill_count_next;
+				new_instr_reg <= new_instr_next;
+				instruction_assembled_reg <= instruction_assembled_next;
+			end if;
 		end if;	
 
 	end process;
@@ -134,12 +158,13 @@ begin
 	
 	character_decode: process( new_char, char_get, new_instr_reg) is
 	begin
-		if( new_char = "00110000" and char_get = '1' ) then 
+		if( new_char = "00001100" and char_get = '1' ) then 
 			new_instr_next <= '0' & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
-		elsif ( new_char = "00110001" and char_get = '1') then
+		elsif ( new_char = "10001100" and char_get = '1') then
 			new_instr_next <= '1' & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
 		else
-			new_instr_next <= new_instr_reg;
+			--new_instr_next <= new_instr_reg;
+			new_instr_next <= new_char(CHARACTER_SIZE-1) & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
 		end if;
 	end process;
 
@@ -150,7 +175,7 @@ begin
 	get_instruction: process ( char_get, instruction_assembled_reg ) is --counter for instruction assembling
 	begin
 		if (char_get = '1') then
-			if(instruction_assembled_reg = CPU_DATA_WIDTH) then
+			if(instruction_assembled_reg = "010000") then
 				instr_get <= '1';
 				instruction_assembled_next <= (others => '0' );
 			else
@@ -183,7 +208,7 @@ begin
 					instr_fill_count_next <= instr_fill_count + 4;	--increment instr counter and enable writing to program ram 
 					ram_write_enable <= '1';
 				end if;			
-				if(eot = '1') then
+				if( force_reset(CPU_DATA_WIDTH-1) = '1') then
 					system_state_next <= calculate; --end of transmission from uart
 				end if;						
 			when calculate => 
@@ -197,6 +222,13 @@ begin
 	end process;
 	
 	output_led <= eot;
+	
+	ILA_SERIAL: ila_regs port map(
+    clk => clk,
+    probe0 => new_instr,
+    probe1(0) => new_instr(0),
+    probe2(0) => new_instr(CPU_DATA_WIDTH -1)
+    );
     -- Just added to force the tools not to optimize away the logic
    -- process (clk)
         --variable red: std_logic := '0';
