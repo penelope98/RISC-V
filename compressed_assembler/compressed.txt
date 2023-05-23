@@ -1,0 +1,16 @@
+c.lw $5,$0,0
+c.lw $4,$0,0
+c.lw $3,$0,0
+c.lw $2,$0,0
+c.lw $1,$0,0
+c.addi $5,-5
+c.li $4,-4
+c.addi $3,-5
+c.li $2,-2
+c.addi $1,-1
+c.addi $0,0
+c.srai $4,2
+c.srli $5,2
+c.slli $1,2
+c.mv $6,$4
+
