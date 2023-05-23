@@ -1,4 +1,3 @@
-vsim -gui work.testbench
 restart -f -nolist -nowave -nobreak -nolog -novirtuals -noassertions -nofcovers -noatv
 
 add wave -position end  sim:/testbench/sys/clk
@@ -74,7 +73,8 @@ add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/equ
 
 
 add list \
-sim:/testbench/sys/cpu/reg_file/registers 
+sim:/testbench/sys/cpu/reg_file/registers -radix "Hexadecimal"\
+sim:/testbench/sys/prog_mem/ram -radix "Hexadecimal"
 
 run 5000ns
 

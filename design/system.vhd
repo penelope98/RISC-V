@@ -30,7 +30,7 @@ architecture structural of system is
 
 begin
 
-    cpu: entity work.ph_risc_v 
+    cpu: entity work.risc_v 
         generic map (
             PROGRAM_ADDRESS_WIDTH => PROGRAM_ADDRESS_WIDTH,
             DATA_ADDRESS_WIDTH => DATA_ADDRESS_WIDTH,
@@ -40,6 +40,7 @@ begin
         port map (
             clk => clk,
             reset_n => reset_n,
+			b_Enter => '0',
             program_read => program_data,
             pc => program_address,
             data_address => data_address,
@@ -68,6 +69,7 @@ begin
         )
         port map (
             clk => clk,
+			reset => reset_n,
             write_en => data_write_en,
             write_data => data_write,
             address => data_address,

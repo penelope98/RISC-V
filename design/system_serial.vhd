@@ -61,6 +61,11 @@ architecture structural of system_serial is
         probe2: in std_logic_vector(0 downto 0) );
     end component;
 
+    component ila_char port(
+        clk: in std_logic;
+        probe0: in std_logic_vector(7 downto 0);
+        probe1: in std_logic_vector(0 downto 0) );
+     end component;
 
 
 
@@ -226,7 +231,7 @@ begin
 	ILA_SERIAL: ila_regs port map(
     clk => clk,
     probe0 => new_instr,
-    probe1(0) => new_instr(0),
+    probe1(0) => instr_get,
     probe2(0) => new_instr(CPU_DATA_WIDTH -1)
     );
     -- Just added to force the tools not to optimize away the logic
