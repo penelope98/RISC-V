@@ -165,12 +165,13 @@ begin
 	character_decode: process( new_char, char_get, new_instr_reg) is
 	begin
 		if( new_char = "00110000" and char_get = '1' ) then 
-			new_instr_next <= '0' & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
+			
+			new_instr_next <= new_instr_reg(CPU_DATA_WIDTH-2 downto 0) & '0';
 		elsif ( new_char = "00110001" and char_get = '1') then
-			new_instr_next <= '1' & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
+		    new_instr_next <= new_instr_reg(CPU_DATA_WIDTH-2 downto 0) & '1';		
 		else
 			new_instr_next <= new_instr_reg;
-			--new_instr_next <= new_char(CHARACTER_SIZE-1) & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
+
 		end if;
 	end process;
 
@@ -181,7 +182,7 @@ begin
 	get_instruction: process ( char_get, instruction_assembled_reg ) is --counter for instruction assembling
 	begin
 		if (char_get = '1') then
-			if(instruction_assembled_reg = "100000") then
+			if(instruction_assembled_reg = "011111") then
 				instr_get <= '1';
 				instruction_assembled_next <= (others => '0' );
 			else

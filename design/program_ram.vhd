@@ -28,13 +28,13 @@ architecture behavioral of program_ram is
     alias word_address: std_logic_vector(PROGRAM_ADDRESS_WIDTH-3 downto 0) is address(PROGRAM_ADDRESS_WIDTH-1 downto 2);
 
 
---       component ila_regs port(
---            clk: in std_logic;
---            probe0: in std_logic_vector(31 downto 0);
---            probe1: in std_logic_vector(0 downto 0);
---            probe2: in std_logic_vector(0 downto 0) );
---        end component;
-
+    component ila_regs port(
+        clk: in std_logic;
+        probe0: in std_logic_vector(31 downto 0);
+        probe1: in std_logic_vector(0 downto 0);
+        probe2: in std_logic_vector(5 downto 0 );
+        probe3: in std_logic_vector(0 downto 0));
+    end component;
 
 begin
 
@@ -52,12 +52,13 @@ begin
 
     read_data <= ram(to_integer(unsigned(word_address)));
 
---    ILA_RAM: ila_regs port map(
---    clk => clk,
---    probe0 => std_logic_vector(ram(0)),
---    probe1(0) => ram(0)(0),
---    probe2(0) => ram(0)(1)
---    );
+    ILA_RAM: ila_regs port map(
+    clk => clk,
+    probe0 => std_logic_vector(ram(0)),
+    probe1(0) => ram(0)(0),
+    probe2 => address(5 downto 0),
+    probe3(0) => '0'
+    );
 
 
 
