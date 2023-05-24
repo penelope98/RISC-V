@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity uart is
+entity uart_inner is
 generic (
         CHARACTER_SIZE: natural := 8
     );
@@ -13,15 +13,15 @@ port(
     char_out: out std_logic_vector(CHARACTER_SIZE-1 downto 0);
     char_flag: out std_logic
 );
-end uart;
+end uart_inner;
 
 
-architecture uart_arch of uart is
+architecture uart_arch of uart_inner is
 
 
 	constant BAUD: integer := 115200;
     constant FREQUENCY_IN_HZ: integer := 100000000; -- "0011 1011 1001 1010 1100 1010 0000 0000"
-    constant BAUD_COUNT_CHECK: integer :=  FREQUENCY_IN_HZ / BAUD; --8,68
+    constant BAUD_COUNT_CHECK: integer :=  FREQUENCY_IN_HZ / BAUD; --868
     type state_type is (standby, wait_half_start_bit, wait_full_data_bit, capture_data_bit, wait_full_last_bit);
     
     
@@ -33,11 +33,13 @@ architecture uart_arch of uart is
     signal uart_bin: std_logic_vector(2 downto 0);
     signal got_char: std_logic;
     
-       component ila_char port(
-            clk: in std_logic;
-            probe0: in std_logic_vector(7 downto 0);
-            probe1: in std_logic_vector(0 downto 0) );
-        end component;
+--       component ila_char port(
+--            clk: in std_logic;
+--            probe0: in std_logic_vector(0 downto 0);
+--            probe1: in std_logic_vector(7 downto 0);
+--            probe2: in std_logic_vector(2 downto 0);
+--            probe3: in std_logic_vector(0 downto 0) );
+--        end component;
 
     
     
@@ -47,7 +49,7 @@ architecture uart_arch of uart is
 	begin
 
 		if rising_edge(clk) then
-			if( reset = '1' ) then
+			if( reset = '0' ) then
 		            uart_state <= standby;
                     char_reg <= (others => '0');
                     cycle_count <= (others => '0');
@@ -95,7 +97,7 @@ architecture uart_arch of uart is
                 char_next <= rx & char_reg(CHARACTER_SIZE-1 downto 1); --get new bit and add to char
                 data_bit_count_next <= data_bit_count + 1;
                 if( data_bit_count = CHARACTER_SIZE-1 ) then
-                    got_char <= '1';				
+                    				
                     uart_state_next <= wait_full_last_bit;
                 else
                     uart_state_next <= wait_full_data_bit;
@@ -104,7 +106,7 @@ architecture uart_arch of uart is
             when wait_full_last_bit =>            
                 cycle_count_next <= cycle_count + 1;
                 if (cycle_count = BAUD_COUNT_CHECK) then 
-                
+					got_char <= '1';
                     uart_state_next <= standby;
                     data_bit_count_next <= (others => '0');
                     cycle_count_next <= (others => '0'); 
@@ -125,28 +127,30 @@ architecture uart_arch of uart is
 	
 	char_out<= char_reg;
 	char_flag <= got_char;
---	process(uart_state) is
---	begin
---	   case(uart_state) is
---            when standby =>
---                uart_bin<="000";
---            when wait_half_start_bit => 
---                uart_bin<="001";
---            when wait_full_data_bit =>
---                uart_bin<="010";
---            when capture_data_bit => 
---                uart_bin<="011";
---            when wait_full_last_bit =>            
---                uart_bin<="100";
---            when others =>
---                uart_bin<="111";
---	   end case;
+	process(uart_state) is
+	begin
+	   case(uart_state) is
+            when standby =>
+                uart_bin<="000";
+            when wait_half_start_bit => 
+                uart_bin<="001";
+            when wait_full_data_bit =>
+                uart_bin<="010";
+            when capture_data_bit => 
+                uart_bin<="011";
+            when wait_full_last_bit =>            
+                uart_bin<="100";
+            when others =>
+                uart_bin<="111";
+	   end case;
 	
---	end process;
-    ILA_UART: ila_char port map(
-    clk => clk,
-    probe0 => char_reg,
-    probe1(0) => got_char
-    );	
+	end process;
+--    ILA_UART: ila_char port map(
+--    clk => clk,
+--    probe0(0) => got_char,
+--    probe1 => char_reg,
+--    probe2 => uart_bin,
+--    probe3(0) => rx
+--    );	
 	
 end uart_arch;

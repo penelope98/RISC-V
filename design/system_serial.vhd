@@ -57,21 +57,22 @@ architecture structural of system_serial is
     component ila_regs port(
         clk: in std_logic;
         probe0: in std_logic_vector(31 downto 0);
-        probe1: in std_logic_vector(0 downto 0); 
-        probe2: in std_logic_vector(0 downto 0) );
+        probe1: in std_logic_vector(0 downto 0);
+        probe2: in std_logic_vector(5 downto 0 );
+        probe3: in std_logic_vector(0 downto 0));
     end component;
 
-    component ila_char port(
-        clk: in std_logic;
-        probe0: in std_logic_vector(7 downto 0);
-        probe1: in std_logic_vector(0 downto 0) );
+     component ila_char port(
+            clk: in std_logic;
+            probe0: in std_logic_vector(0 downto 0);
+            probe1: in std_logic_vector(7 downto 0);
+            probe2: in std_logic_vector(2 downto 0);
+            probe3: in std_logic_vector(0 downto 0) );
      end component;
-
-
 
 begin
 
-	uart_unit: entity work.uart
+	uart_unit: entity work.uart_inner
 		generic map(
         CHARACTER_SIZE => CHARACTER_SIZE
 		)
@@ -104,7 +105,7 @@ begin
      
     prog_mem: entity work.program_ram 
         generic map (
-                ADDRESS_WIDTH => PROGRAM_ADDRESS_WIDTH,
+                PROGRAM_ADDRESS_WIDTH => PROGRAM_ADDRESS_WIDTH,
                 DATA_WIDTH => INSTRUCTION_WIDTH
             )    
         port map (
@@ -132,7 +133,7 @@ begin
     
 	--------------------------INSTR READ PROCESS ---------------------------------------INSTR READ PROCESS ------------------------------------INSTR READ PROCESS -------------------------
 	
-	--CALCULATE--
+	--CALCULATE-- when instruction is FFFF_FFFF
 	risc_reset <= (not reset_n) or force_reset(CPU_DATA_WIDTH-1);
 	force_reset(0) <= new_instr(0);
 	
@@ -163,13 +164,13 @@ begin
 	
 	character_decode: process( new_char, char_get, new_instr_reg) is
 	begin
-		if( new_char = "00001100" and char_get = '1' ) then 
+		if( new_char = "00110000" and char_get = '1' ) then 
 			new_instr_next <= '0' & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
-		elsif ( new_char = "10001100" and char_get = '1') then
+		elsif ( new_char = "00110001" and char_get = '1') then
 			new_instr_next <= '1' & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
 		else
-			--new_instr_next <= new_instr_reg;
-			new_instr_next <= new_char(CHARACTER_SIZE-1) & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
+			new_instr_next <= new_instr_reg;
+			--new_instr_next <= new_char(CHARACTER_SIZE-1) & new_instr_reg(CPU_DATA_WIDTH-1 downto 1);
 		end if;
 	end process;
 
@@ -180,7 +181,7 @@ begin
 	get_instruction: process ( char_get, instruction_assembled_reg ) is --counter for instruction assembling
 	begin
 		if (char_get = '1') then
-			if(instruction_assembled_reg = "010000") then
+			if(instruction_assembled_reg = "100000") then
 				instr_get <= '1';
 				instruction_assembled_next <= (others => '0' );
 			else
@@ -197,7 +198,7 @@ begin
 	
 --------------------------INSTR READ PROCESS end---------------------------------------INSTR READ PROCESS end------------------------------------INSTR READ PROCESS end-------------------------
 	
-	SYSTEM_FSM: process(instr_get,system_state,eot,program_counter,instr_fill_count)is
+	SYSTEM_FSM: process(instr_get,system_state,force_reset,program_counter,instr_fill_count)is
 	begin
 
 
@@ -232,8 +233,20 @@ begin
     clk => clk,
     probe0 => new_instr,
     probe1(0) => instr_get,
-    probe2(0) => new_instr(CPU_DATA_WIDTH -1)
+    probe2 => std_logic_vector(instruction_assembled_reg),
+    probe3(0) => char_get
     );
+    
+    
+    ILA_UART_SERIAL: ila_char port map(
+    clk => clk,
+    probe0(0) => char_get,
+    probe1 => new_char,
+    probe2 => (others => '0'),
+    probe3(0) => input_data
+    );	
+    
+    
     -- Just added to force the tools not to optimize away the logic
    -- process (clk)
         --variable red: std_logic := '0';

@@ -11,8 +11,8 @@ set_property PACKAGE_PIN E3 [get_ports clk]
  
 ## Switches
 #Bank = 34, Pin name = IO_L21P_T3_DQS_34,					Sch name = SW0
-##set_property PACKAGE_PIN U9 [get_ports {input[0]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {input[0]}]
+#set_property PACKAGE_PIN U9 [get_ports {reset_n}]					
+#	set_property IOSTANDARD LVCMOS33 [get_ports {reset_n}]
 #Bank = 34, Pin name = IO_25_34,							Sch name = SW1
 #set_property PACKAGE_PIN U8 [get_ports {input[1]}]					
 	#set_property IOSTANDARD LVCMOS33 [get_ports {input[1]}]
