@@ -26,10 +26,13 @@ architecture structural of system is
     signal data_write_en: std_logic;
     signal data_address: std_logic_vector(DATA_ADDRESS_WIDTH-1 downto 0);
     signal data_read: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
-    signal data_write: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);    
+    signal data_write: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);   
+	signal reset_risc: std_logic;
 
 begin
 
+
+	reset_risc <= not reset_n;
     cpu: entity work.risc_v 
         generic map (
             PROGRAM_ADDRESS_WIDTH => PROGRAM_ADDRESS_WIDTH,
@@ -39,7 +42,7 @@ begin
         )
         port map (
             clk => clk,
-            reset_n => reset_n,
+            reset_n => reset_risc,
 			b_Enter => '0',
             program_read => program_data,
             pc => program_address,

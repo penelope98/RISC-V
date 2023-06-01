@@ -21,14 +21,14 @@ end program_memory;
 
 architecture behavioral of program_memory is
 
-    constant MEMORY_DEPTH: natural := 2 ** ADDRESS_WIDTH;
+    constant MEMORY_DEPTH: natural := 2 ** ADDRESS_WIDTH+1;
 
-    type ram_type is array (0 to MEMORY_DEPTH-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
+    type ram_type is array (0 to MEMORY_DEPTH-1) of std_logic_vector(DATA_WIDTH/2 -1 downto 0); 
     
     impure function initRAM(filename: in string) return ram_type is
         FILE ram_file: text is in filename;
         variable ram_file_line: line;
-        variable instruction: bit_vector(DATA_WIDTH-1 downto 0);
+        variable instruction: bit_vector(DATA_WIDTH/2 -1 downto 0);
         variable ram: ram_type := (others => (others => '0')); --RAM ARRAY
     begin
         for i in ram_type'range loop
@@ -41,10 +41,9 @@ architecture behavioral of program_memory is
         return ram;        
     end function;
     
-    signal ram: ram_type := initRAM("C:\Users\Penelope\Desktop\LU\2nd sem\ICP1 RISC-V\Modelsim\instruction_mem.mem");
+    signal ram: ram_type := initRAM("C:\Users\Penelope\Desktop\LU\2nd sem\ICP1 RISC-V\Modelsim\instructionmem2_div.mem");
     
-    alias word_address: std_logic_vector(ADDRESS_WIDTH-3 downto 0) is address(ADDRESS_WIDTH-1 downto 2);
-
+    alias word_address: std_logic_vector(ADDRESS_WIDTH-2 downto 0) is address(ADDRESS_WIDTH-1 downto 1);
 begin
 
     instruction_ram: process (clk) is
@@ -56,6 +55,6 @@ begin
         end if;
     end process instruction_ram;
 
-    read_data <= ram(to_integer(unsigned(word_address)));
+    read_data <= ram(to_integer(unsigned(word_address))+1)& ram(to_integer(unsigned(word_address)));
 
 end behavioral;

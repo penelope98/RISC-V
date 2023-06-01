@@ -18,7 +18,7 @@ COMPRESSED = { "c.lw" : ["010",1,"00"],
 
 def COMP_TRANSLATE():
     f = open("compressed.txt", "r")
-    binf = open("compressed_bin.b","w")
+    binf = open("compressed_bin.mem","w")
     for instr_line in f:
         instr_clean = instr_line.replace(',',' ')[:-1]
         instr_clean = instr_clean.replace('\n',' ')

@@ -39,6 +39,7 @@ architecture structural of system_serial is
 	
 	type state_type is (fill_ram,calculate);
 	signal system_state, system_state_next: state_type;
+	signal system_bin: std_logic; --debug state conversion
 	
 	
 	signal instr_fill_count,instr_fill_count_next: unsigned(PROGRAM_ADDRESS_WIDTH-1 downto 0); --counter for instructions
@@ -52,24 +53,34 @@ architecture structural of system_serial is
 	signal eot,risc_reset: std_logic; --signals the end of instruction read from uart
 	signal force_reset: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
 
-	--==--==--==--==--==--==--==--==--==--==-signals for uart-==--==--==--==--==--==--==--==--==--==--
+	--==--==--==--==--==--==--==--==--==--==-BEDUGGING-==--==--==--==--==--==--==--==--==--==--
 
-    component ila_regs port(
-        clk: in std_logic;
-        probe0: in std_logic_vector(31 downto 0);
-        probe1: in std_logic_vector(0 downto 0);
-        probe2: in std_logic_vector(5 downto 0 );
-        probe3: in std_logic_vector(0 downto 0));
-    end component;
+--    component ila_regs port(
+--        clk: in std_logic;
+--        probe0: in std_logic_vector(31 downto 0);
+--        probe1: in std_logic_vector(0 downto 0);
+--        probe2: in std_logic_vector(5 downto 0 );
+--        probe3: in std_logic_vector(0 downto 0);
+--        probe4: in std_logic_vector(7 downto 0));
+--    end component;
 
-     component ila_char port(
+--     component ila_char port(
+--            clk: in std_logic;
+--            probe0: in std_logic_vector(0 downto 0);
+--            probe1: in std_logic_vector(7 downto 0);
+--            probe2: in std_logic_vector(2 downto 0);
+--            probe3: in std_logic_vector(0 downto 0) );
+--     end component;
+
+     component ila_serial_state port(
             clk: in std_logic;
             probe0: in std_logic_vector(0 downto 0);
-            probe1: in std_logic_vector(7 downto 0);
-            probe2: in std_logic_vector(2 downto 0);
-            probe3: in std_logic_vector(0 downto 0) );
+            probe1: in std_logic_vector(0 downto 0);
+            probe2: in std_logic_vector(9 downto 0));
      end component;
 
+
+	--==--==--==--==--==--==--==--==--==--==-==--==--==--==--==--==--==--==--==--==--==--==--==--==--==--==--
 begin
 
 	uart_unit: entity work.uart_inner
@@ -182,7 +193,7 @@ begin
 	get_instruction: process ( char_get, instruction_assembled_reg ) is --counter for instruction assembling
 	begin
 		if (char_get = '1') then
-			if(instruction_assembled_reg = "011111") then
+			if(instruction_assembled_reg = "100000") then
 				instr_get <= '1';
 				instruction_assembled_next <= (others => '0' );
 			else
@@ -230,24 +241,44 @@ begin
 	
 	output_led <= eot;
 	
-	ILA_SERIAL: ila_regs port map(
-    clk => clk,
-    probe0 => new_instr,
-    probe1(0) => instr_get,
-    probe2 => std_logic_vector(instruction_assembled_reg),
-    probe3(0) => char_get
-    );
+-----------------------------------DEBUG--------------------------------------------------------------------------------------------
+	process(system_state) is
+	begin
+	   case(system_state) is
+            when fill_ram =>
+                system_bin<='1';
+            when calculate => 
+				system_bin<='0';
+            when others =>
+
+	   end case;	
+	end process;
+	
+	
+--	ILA_SERIAL: ila_regs port map(
+--    clk => clk,
+--    probe0 => new_instr,
+--    probe1(0) => instr_get,
+--    probe2 => std_logic_vector(instruction_assembled_reg),
+--    probe3(0) => char_get,
+--    probe4 => new_char
+--    );
+       
+--    ILA_UART_SERIAL: ila_char port map(
+--    clk => clk,
+--    probe0(0) => char_get,
+--    probe1 => new_char,
+--    probe2 => (others => '0'),
+--    probe3(0) => input_data
+--    );	
     
-    
-    ILA_UART_SERIAL: ila_char port map(
+    ILA_STATE_SERIAL: ila_serial_state port map(
     clk => clk,
-    probe0(0) => char_get,
-    probe1 => new_char,
-    probe2 => (others => '0'),
-    probe3(0) => input_data
+    probe0(0) => system_bin,
+    probe1(0) => force_reset(CPU_DATA_WIDTH-1),
+    probe2 => std_logic_vector(instr_fill_count)
     );	
-    
-    
+        
     -- Just added to force the tools not to optimize away the logic
    -- process (clk)
         --variable red: std_logic := '0';

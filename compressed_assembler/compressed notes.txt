@@ -1,0 +1,16 @@
+c.lw $5,$0,0
+c.lw $4,$0,0
+c.lw $3,$0,0
+c.lw $2,$0,0
+c.lw $1,$0,0
+c.addi $5,-5
+c.li $4,-4 #doesnt work. messed up $0 register -> loaded -4 to it
+c.addi $3,-5
+c.li $2,-2 #doesnt work -> loaded -2 to 0 register
+c.addi $1,-1
+c.addi $0,0 #! made $0 register go from -2 to -4
+c.srai $4,2 # cant check because $4 was 0
+c.srli $5,2 #works. fills in two 0's from the left
+c.slli $1,2 #works. fills zeros from right
+c.mv $5,$4 #doesnt work
+

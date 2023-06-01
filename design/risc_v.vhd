@@ -406,18 +406,18 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 			end if;
 		elsif program_read (1 downto 0) = "01" then
 			if program_read(15 downto 13) = "000" then --C.ADDI
-				expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2) & program_read(11 downto 7) & "000" & program_read(11 downto 7) & "0010011"; 
+				expanded_instruction <=  program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)& program_read(12) & program_read(6 downto 2) & program_read(11 downto 7) & "000" & program_read(11 downto 7) & "0010011"; 
 			elsif program_read(15 downto 13) = "010" then --C.LI
-				expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2)& program_read(11 downto 7) & "00000000" & "0010011"; 
+				expanded_instruction <= program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)& program_read(12) & program_read(6 downto 2)& program_read(11 downto 7) & "00000000" & "0010011"; 
 			elsif program_read(15 downto 13) = "011" then --C.LUI
-				expanded_instruction <= "00000000000000" & program_read(12) & program_read(6 downto 2) & program_read(11 downto 7) &"0110111";
+				expanded_instruction <= program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)& program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)& program_read(12) & program_read(12) &program_read(12) & program_read(6 downto 2) & program_read(11 downto 7) &"0110111";
 			elsif program_read(15 downto 13) = "100" then 
 				if program_read(11 downto 10) = "00" then --C.SRLI
-					expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2) & program_read(11 downto 7) & "101" & program_read(11 downto 7) &"0010011";
+					expanded_instruction <= "000000" & program_read(12)& program_read(6 downto 2) & program_read(11 downto 7) & "101" & program_read(11 downto 7) &"0010011";
  				elsif program_read(11 downto 10) = "01" then --C.SRAI
-					expanded_instruction <= "010000" & program_read(12) & program_read(6 downto 2) & "00" & program_read(9 downto 7) & "10100" & program_read(9 downto 7) &"0010011";
+					expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2) & "00" & program_read(9 downto 7) & "10100" & program_read(9 downto 7) &"0010011";
 				elsif program_read(11 downto 10) = "10" then --C.ANDI
-					expanded_instruction <= "000000" & program_read(12) & program_read(6 downto 2) & "00" & program_read(9 downto 7) & "11100" & program_read(9 downto 7) & "0010011"; 
+					expanded_instruction <= program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)&program_read(12)& program_read(12) & program_read(6 downto 2) & "00" & program_read(9 downto 7) & "11100" & program_read(9 downto 7) & "0010011"; 
 				else 
 				 	if program_read(6 downto 5) = "00" then --C.SUB
 						expanded_instruction <= "0100000" & program_read(6 downto 2) & "00" & program_read(9 downto 7) & "00000" & program_read(9 downto 7) & "0110011";

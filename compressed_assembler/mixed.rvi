@@ -1,0 +1,7 @@
+c.addi $2,7
+addi $1,$0,1
+c.addi $0,0
+c.addi $0,0
+c.addi $0,0
+xori $4,$2,1
+c.xor $2,$1

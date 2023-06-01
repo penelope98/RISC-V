@@ -12,5 +12,5 @@ c.addi $0,0
 c.srai $4,2
 c.srli $5,2
 c.slli $1,2
-c.mv $6,$4
+c.mv $5,$4
 
