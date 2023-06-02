@@ -30,14 +30,12 @@ architecture behavioral of register_file is
     type register_array is array (0 to REGISTER_FILE_SIZE-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
     signal registers: register_array := ( others => (others => '0'));
     
-        component ila_regs port(
-        clk: in std_logic;
-        probe0: in std_logic_vector(31 downto 0);
-        probe1: in std_logic_vector(0 downto 0);
-        probe2: in std_logic_vector(4 downto 0 );
-        probe3: in std_logic_vector(0 downto 0);
-        probe4: in std_logic_vector(7 downto 0));
-    end component;
+--        component ila_regs port(
+--        clk: in std_logic;
+--        probe0: in std_logic_vector(31 downto 0);
+--        probe1: in std_logic_vector(0 downto 0);
+--        probe2: in std_logic_vector(4 downto 0) );
+--    end component;
      
 begin
 
@@ -60,14 +58,12 @@ begin
     read2_data <= registers(to_integer(unsigned(read2_id)));
     
     
-    ILA_RAM: ila_regs port map(
-    clk => clk,
-    probe0 => registers(3),
-    probe1(0) => write_en,
-    probe2 => write_id ,
-    probe3(0) => '0',
-    probe4 => ( others => '0' )
-    );
+--    ILA_RAM: ila_regs port map(
+--    clk => clk,
+--    probe0 => registers(3),
+--    probe1(0) => write_en,
+--    probe2 => write_id 
+--    );
 
     
     

@@ -3,7 +3,7 @@ import numpy as np
 COMPRESSED = { "c.lw" : ["010",1,"00"],
                "c.sw":["110",1,"00"],
                "c.addi":["000",2,"01"],
-               "c.lui":["000",2,"01"],
+               "c.lui":["011",2,"01"],
                "c.li":["010",2,"01"],
                "c.srli":["100",3,"01","00"],
                "c.srai":["100",3,"01","01"],
@@ -16,9 +16,9 @@ COMPRESSED = { "c.lw" : ["010",1,"00"],
                "c.mv":["100",6,"10"],
                "c.add":["100",6,"10"]}
 
-def COMP_TRANSLATE():
-    f = open("compressed.txt", "r")
-    binf = open("compressed_bin.mem","w")
+def COMP_TRANSLATE(filename):
+    f = open(filename, "r")
+    binf = open("NEW_COMPRESSED.mem","w")
     for instr_line in f:
         instr_clean = instr_line.replace(',',' ')[:-1]
         instr_clean = instr_clean.replace('\n',' ')
@@ -49,10 +49,14 @@ def COMP_TRANSLATE():
                     shamt_imm = np.binary_repr(int(instr_pieces[2]),6)
                     if ( int(instr_pieces[2]) == 0 and ( instr_pieces[0]=="c.srli" or  instr_pieces[0]=="c.srai" )):
                         print( "WARNING: zero immediate for " + instr_pieces[0] )
+                    if ( int(instr_pieces[1][1:])< 8 and int(instr_pieces[1][1:])> 15 and ( instr_pieces[0]=="c.srli" or  instr_pieces[0]=="c.srai" )):
+                        print( "WARNING: illegal registers for " + instr_pieces[0] )
                     bini = entry[0] + shamt_imm[0] + entry[3] + rs1_rd + shamt_imm[1:] + entry[2]
                 case 4: #sub,xor,or,and
                     rs1_rd = np.binary_repr(int(instr_pieces[1][1:]),3)
                     rs2 = np.binary_repr(int(instr_pieces[2][1:]),3)
+                    if ( int(instr_pieces[1][1:])< 8 and int(instr_pieces[1][1:])> 15):
+                        print( "WARNING: illegal registers for " + instr_pieces[0] )
                     bini = entry[0] + "0" + "11" + rs1_rd + entry[3] + rs2 + entry[2]
                 case 5: #slli
                     rs1_rd = np.binary_repr(int(instr_pieces[1][1:]),5)
@@ -66,9 +70,9 @@ def COMP_TRANSLATE():
                     rs1_rd = np.binary_repr(int(instr_pieces[1][1:]),5)
                     rs2 = np.binary_repr(int(instr_pieces[2][1:]),5)
                     if( instr_pieces[0] == "c.mv" ):
-                        f4 = "1"
-                    else:
                         f4 = "0"
+                    else:
+                        f4 = "1"
                     if(int(instr_pieces[2][1:])==0):
                         print( "WARNING:rs2 = x0, invalid "+ instr_pieces[0])
                     bini = entry[0] + f4 + rs1_rd + rs2 + entry[2]
@@ -80,5 +84,3 @@ def COMP_TRANSLATE():
     return
 
 
-
-COMP_TRANSLATE()    

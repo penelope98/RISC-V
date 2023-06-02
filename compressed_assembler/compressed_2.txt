@@ -1,0 +1,16 @@
+c.li $9,7
+c.li $10,1
+c.lui $11,3
+c.addi $12,-4
+c.li $13,6
+c.mv $14,$5
+c.add $14,$4
+c.and $1,$2
+c.sub $2,$4
+c.srai $4,2 #
+c.srai $3,2
+c.or $1,$2 #
+c.xor $2,$5 #
+
+
+

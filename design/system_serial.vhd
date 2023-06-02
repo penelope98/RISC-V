@@ -55,14 +55,14 @@ architecture structural of system_serial is
 
 	--==--==--==--==--==--==--==--==--==--==-BEDUGGING-==--==--==--==--==--==--==--==--==--==--
 
---    component ila_regs port(
---        clk: in std_logic;
---        probe0: in std_logic_vector(31 downto 0);
---        probe1: in std_logic_vector(0 downto 0);
---        probe2: in std_logic_vector(5 downto 0 );
---        probe3: in std_logic_vector(0 downto 0);
---        probe4: in std_logic_vector(7 downto 0));
---    end component;
+    component ila_regs port(
+        clk: in std_logic;
+        probe0: in std_logic_vector(31 downto 0);
+        probe1: in std_logic_vector(0 downto 0);
+        probe2: in std_logic_vector(4 downto 0 );
+        probe3: in std_logic_vector(5 downto 0 ));
+    end component;
+
 
 --     component ila_char port(
 --            clk: in std_logic;
@@ -72,12 +72,12 @@ architecture structural of system_serial is
 --            probe3: in std_logic_vector(0 downto 0) );
 --     end component;
 
-     component ila_serial_state port(
-            clk: in std_logic;
-            probe0: in std_logic_vector(0 downto 0);
-            probe1: in std_logic_vector(0 downto 0);
-            probe2: in std_logic_vector(9 downto 0));
-     end component;
+--     component ila_serial_state port(
+--            clk: in std_logic;
+--            probe0: in std_logic_vector(0 downto 0);
+--            probe1: in std_logic_vector(0 downto 0);
+--            probe2: in std_logic_vector(9 downto 0));
+--     end component;
 
 
 	--==--==--==--==--==--==--==--==--==--==-==--==--==--==--==--==--==--==--==--==--==--==--==--==--==--==--
@@ -176,7 +176,6 @@ begin
 	character_decode: process( new_char, char_get, new_instr_reg) is
 	begin
 		if( new_char = "00110000" and char_get = '1' ) then 
-			
 			new_instr_next <= new_instr_reg(CPU_DATA_WIDTH-2 downto 0) & '0';
 		elsif ( new_char = "00110001" and char_get = '1') then
 		    new_instr_next <= new_instr_reg(CPU_DATA_WIDTH-2 downto 0) & '1';		
@@ -193,7 +192,7 @@ begin
 	get_instruction: process ( char_get, instruction_assembled_reg ) is --counter for instruction assembling
 	begin
 		if (char_get = '1') then
-			if(instruction_assembled_reg = "100000") then
+			if(instruction_assembled_reg = CPU_DATA_WIDTH-1) then
 				instr_get <= '1';
 				instruction_assembled_next <= (others => '0' );
 			else
@@ -255,14 +254,13 @@ begin
 	end process;
 	
 	
---	ILA_SERIAL: ila_regs port map(
---    clk => clk,
---    probe0 => new_instr,
---    probe1(0) => instr_get,
---    probe2 => std_logic_vector(instruction_assembled_reg),
---    probe3(0) => char_get,
---    probe4 => new_char
---    );
+	ILA_SERIAL: ila_regs port map( 
+    clk => clk,
+    probe0 => new_instr,
+    probe1(0) => instr_get,
+    probe2 => std_logic_vector(instr_fill_count(4 downto 0)),
+    probe3 => std_logic_vector(instruction_assembled_reg)
+     );
        
 --    ILA_UART_SERIAL: ila_char port map(
 --    clk => clk,
@@ -272,12 +270,12 @@ begin
 --    probe3(0) => input_data
 --    );	
     
-    ILA_STATE_SERIAL: ila_serial_state port map(
-    clk => clk,
-    probe0(0) => system_bin,
-    probe1(0) => force_reset(CPU_DATA_WIDTH-1),
-    probe2 => std_logic_vector(instr_fill_count)
-    );	
+--    ILA_STATE_SERIAL: ila_serial_state port map(
+--    clk => clk,
+--    probe0(0) => system_bin,
+--    probe1(0) => force_reset(CPU_DATA_WIDTH-1),
+--    probe2 => std_logic_vector(instr_fill_count)
+--    );	
         
     -- Just added to force the tools not to optimize away the logic
    -- process (clk)
