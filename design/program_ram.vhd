@@ -31,8 +31,11 @@ architecture behavioral of program_ram is
 --    component ila_regs port(
 --        clk: in std_logic;
 --        probe0: in std_logic_vector(31 downto 0);
---        probe1: in std_logic_vector(0 downto 0);
---        probe2: in std_logic_vector(4 downto 0 ));
+--        probe1: in std_logic_vector(31 downto 0);
+--        probe2: in std_logic_vector(31 downto 0);
+--        probe3: in std_logic_vector(31 downto 0);
+--        probe4: in std_logic_vector(4 downto 0);
+--        probe5: in std_logic_vector(0 downto 0 ));
 --    end component;
 
 
@@ -54,9 +57,12 @@ begin
 
 --	ILA_RAM: ila_regs port map(
 --    clk => clk,
---    probe0 => ram(1),
---    probe1(0) => write_en,
---    probe2 => address(4 downto 0)
+--    probe0 => ram(0),
+--    probe1 => ram(1),
+--    probe2 => ram(2),
+--    probe3 => ram(3),
+--    probe4 => address(4 downto 0),
+--    probe5(0) => write_en
 --    );
 
 

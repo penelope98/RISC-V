@@ -28,7 +28,8 @@ entity risc_v is
         data_address: out std_logic_vector(DATA_ADDRESS_WIDTH-1 downto 0);
         data_read: in std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
         data_write_en: out std_logic;
-        data_write: out std_logic_vector(CPU_DATA_WIDTH-1 downto 0) 
+        data_write: out std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
+		instruction_count_final: in std_logic_vector(PROGRAM_ADDRESS_WIDTH-1 downto 0)
     );        
 end risc_v;
 
@@ -276,7 +277,19 @@ architecture behavioral of risc_v is
 		absolute: out std_logic_vector(DATA_WIDTH-1 downto 0)
     );
 	end component;
-	     
+	
+	
+	
+	component ila_program port(
+       clk: in std_logic;
+       probe0: in std_logic_vector(31 downto 0);
+       probe1: in std_logic_vector(9 downto 0);
+       probe2: in std_logic_vector(9 downto 0);
+       probe3: in std_logic_vector(0 downto 0);
+       probe4: in std_logic_vector(0 downto 0);
+       probe5: in std_logic_vector(9 downto 0));
+     end component;
+
 	   
 begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
@@ -362,12 +375,15 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
 
 --############################################################################################################PROCESSES####################################################3
-    next_pc_logic: process (pc_reg, id_branch_address, pc_src,pc_cmp) is
+    next_pc_logic: process (pc_reg, id_branch_address, pc_src,pc_cmp,instruction_count_final) is
     begin
-        if pc_src = '0' and pc_cmp = '0' then
-            pc_next <= std_logic_vector(unsigned(pc_reg) + 4);
-        elsif pc_src = '0' and pc_cmp = '1' then
-			pc_next <= std_logic_vector(unsigned(pc_reg) + 2);
+        
+		if (unsigned(pc_reg) < unsigned(instruction_count_final)) then
+			if pc_src = '0' and pc_cmp = '0' then
+				pc_next <= std_logic_vector(unsigned(pc_reg) + 4);
+			elsif pc_src = '0' and pc_cmp = '1' then
+				pc_next <= std_logic_vector(unsigned(pc_reg) + 2);
+			end if;
 		else
             pc_next <= id_branch_address;
         end if;
@@ -674,7 +690,6 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	end process;	
 	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
-	
     ---------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     -- Pipeline registers next state logic
     if_id_next <= (
@@ -728,5 +743,17 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     data_address <= ex_mem_reg.alu_result(DATA_ADDRESS_WIDTH-1 downto 0); --input address to data mem    
     data_write <= ex_mem_reg.register_store_addr;  --STORE --input data to data mem    
     data_write_en <= ex_mem_reg.control_mem_write;  
+    
+    
+    	ILA_PROGRAM_READ: ila_program port map(
+    clk => clk,
+    probe0 => program_read,
+    probe1 => pc_reg,
+    probe2 => pc_next,
+    probe3(0) => reset_n,
+    probe4(0) => pc_src,
+    probe5 => instruction_count_final
+    );	
+       
     
 end behavioral;
