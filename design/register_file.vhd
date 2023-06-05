@@ -37,8 +37,7 @@ architecture behavioral of register_file is
 --        probe2: in std_logic_vector(31 downto 0);
 --        probe3: in std_logic_vector(31 downto 0);
 --        probe4: in std_logic_vector(0 downto 0);
---        probe5: in std_logic_vector(0 downto 0 );
---        probe6: in std_logic_vector(4 downto 0 ));
+--        probe5: in std_logic_vector(4 downto 0 ));
 --    end component;
 
 
@@ -70,9 +69,8 @@ begin
 --    probe1 => registers(2),
 --    probe2 => registers(3),
 --    probe3 => registers(4),
---    probe4(0) => reset_n,
---    probe5(0) => write_en,
---    probe6 => write_id
+--    probe4(0) => write_en,
+--    probe5 => write_id
 --    );
     
 

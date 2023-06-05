@@ -9,6 +9,7 @@ entity system_serial is
         PROGRAM_ADDRESS_WIDTH: natural := 10;
         DATA_ADDRESS_WIDTH: natural := 6;
         CPU_DATA_WIDTH: natural := 32;
+		CPU_COMPRESSED_WIDTH: natural := 16;
 		CHARACTER_SIZE: natural := 8
     );
     
@@ -44,14 +45,14 @@ architecture structural of system_serial is
 	
 	signal instr_fill_count,instr_fill_count_next: unsigned(PROGRAM_ADDRESS_WIDTH-1 downto 0); --counter for instructions
 	signal instruction_assembled_reg,instruction_assembled_next: unsigned(DATA_ADDRESS_WIDTH-1 downto 0); --counter for instruction get
-	signal new_instr,new_instr_reg,new_instr_next: std_logic_vector(CPU_DATA_WIDTH-1 downto 0); --instruction reg and wire
+	signal new_instr,new_instr_reg,new_instr_next: std_logic_vector(CPU_COMPRESSED_WIDTH-1 downto 0); --instruction reg and wire
 	signal char_get,instr_get: std_logic; --flags for character get and instruction get
 	
 	signal new_char: std_logic_vector(CHARACTER_SIZE-1 downto 0); --new char from uart
 	
 	signal ram_write_enable: std_logic;
 	signal eot,risc_reset,force_flag: std_logic; --signals the end of instruction read from uart
-	signal force_reset: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
+	signal force_reset: std_logic_vector(CPU_COMPRESSED_WIDTH-1 downto 0);
 	--buffers for ram
 	signal i_get_current,i_get_next: std_logic;
 	signal write_address_current,write_address_next: std_logic_vector(PROGRAM_ADDRESS_WIDTH-1 downto 0);
@@ -153,7 +154,7 @@ begin
 	force_reset(0) <= new_instr(0);
 	
 	
-	FORCE_RESET_BITAND : for I in 1 to CPU_DATA_WIDTH-1 generate
+	FORCE_RESET_BITAND : for I in 1 to CPU_COMPRESSED_WIDTH-1 generate
 	force_reset(I)<= force_reset(I-1) and new_instr(I);
 	end generate;
 
@@ -183,7 +184,7 @@ begin
 	character_decode: process( new_char, char_get, new_instr_reg) is
 	begin
 	   if( char_get='1') then
-	       new_instr_next <= new_instr_reg(CPU_DATA_WIDTH-2 downto 0) & new_char(0);
+	       new_instr_next <= new_instr_reg(CPU_COMPRESSED_WIDTH-2 downto 0) & new_char(0);
 	   else
             new_instr_next <= new_instr_reg;
 	   end if; 
@@ -194,7 +195,7 @@ begin
 	get_instruction: process ( char_get, instruction_assembled_reg ) is --counter for instruction assembling
 	begin
 		if (char_get = '1') then
-			if(instruction_assembled_reg = CPU_DATA_WIDTH-1) then
+			if(instruction_assembled_reg = CPU_COMPRESSED_WIDTH-1) then
 				instr_get <= '1';
 				instruction_assembled_next <= (others => '0' );
 			else
@@ -228,9 +229,9 @@ begin
 				program_address <= write_address_current;
 				
 				if(instr_get = '1') then
-					instr_fill_count_next <= instr_fill_count + 4;	--increment instr counter and enable writing to program ram 				
+					instr_fill_count_next <= instr_fill_count + 2;	--increment instr counter and enable writing to program ram 				
 				end if;			
-				if( force_reset(CPU_DATA_WIDTH-1) = '1') then
+				if( force_reset(CPU_COMPRESSED_WIDTH-1) = '1') then
 					force_flag <= '1';
 					system_state_next <= calculate; --end of transmission from uart
 				end if;						

@@ -13,7 +13,7 @@ use work.common.all;
 
 entity risc_v is    
     generic(
-        PROGRAM_ADDRESS_WIDTH: natural := 6;
+        PROGRAM_ADDRESS_WIDTH: natural := 10;
         DATA_ADDRESS_WIDTH: natural := 6;
         CPU_DATA_WIDTH: natural := 32;
         REGISTER_FILE_ADDRESS_WIDTH: natural := 5
@@ -280,15 +280,15 @@ architecture behavioral of risc_v is
 	
 	
 	
-	component ila_program port(
-       clk: in std_logic;
-       probe0: in std_logic_vector(31 downto 0);
-       probe1: in std_logic_vector(9 downto 0);
-       probe2: in std_logic_vector(9 downto 0);
-       probe3: in std_logic_vector(0 downto 0);
-       probe4: in std_logic_vector(0 downto 0);
-       probe5: in std_logic_vector(9 downto 0));
-     end component;
+--	component ila_program port(
+--       clk: in std_logic;
+--       probe0: in std_logic_vector(31 downto 0);
+--       probe1: in std_logic_vector(9 downto 0);
+--       probe2: in std_logic_vector(9 downto 0);
+--       probe3: in std_logic_vector(0 downto 0);
+--       probe4: in std_logic_vector(0 downto 0);
+--       probe5: in std_logic_vector(9 downto 0));
+--     end component;
 
 	   
 begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -438,7 +438,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 				 	if program_read(6 downto 5) = "00" then --C.SUB
 						expanded_instruction <= "0100000" & "01" & program_read(4 downto 2) & "01" & program_read(9 downto 7) & "000"& "01" & program_read(9 downto 7) & "0110011";
 					elsif program_read(6 downto 5) = "01" then --C.XOR
-						expanded_instruction <= "0000000" & "01" & program_read(4 downto 2) & "01" & program_read(9 downto 7) & "111"& "01" & program_read(9 downto 7) & "0110011"; 
+						expanded_instruction <= "0000000" & "01" & program_read(4 downto 2) & "01" & program_read(9 downto 7) & "100"& "01" & program_read(9 downto 7) & "0110011"; 
 					elsif program_read(6 downto 5) = "10" then --C.OR
 						expanded_instruction <= "0000000" & "01" & program_read(4 downto 2) & "01" & program_read(9 downto 7) & "110"& "01" & program_read(9 downto 7) & "0110011"; 
 					else --C.AND
@@ -745,15 +745,15 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     data_write_en <= ex_mem_reg.control_mem_write;  
     
     
-    	ILA_PROGRAM_READ: ila_program port map(
-    clk => clk,
-    probe0 => program_read,
-    probe1 => pc_reg,
-    probe2 => pc_next,
-    probe3(0) => reset_n,
-    probe4(0) => pc_src,
-    probe5 => instruction_count_final
-    );	
+--    ILA_PROGRAM_READ: ila_program port map(
+--    clk => clk,
+--    probe0 => program_read,
+--    probe1 => pc_reg,
+--    probe2 => pc_next,
+--    probe3(0) => reset_n,
+--    probe4(0) => pc_src,
+--    probe5 => instruction_count_final
+--    );	
        
     
 end behavioral;
