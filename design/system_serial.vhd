@@ -83,6 +83,12 @@ architecture structural of system_serial is
 --            probe2: in std_logic_vector(9 downto 0));
 --     end component;
 
+--     component ila_program_data port(
+--            clk: in std_logic;
+--            probe0: in std_logic_vector(31 downto 0);
+--            probe1: in std_logic_vector(9 downto 0);
+--            probe2: in std_logic_vector(0 downto 0));
+--     end component;
 
 	--==--==--==--==--==--==--==--==--==--==-==--==--==--==--==--==--==--==--==--==--==--==--==--==--==--==--
 begin
@@ -116,6 +122,7 @@ begin
             data_read => data_read,
             data_write_en => data_write_en,
             data_write => data_write,
+            state_calculate => system_bin,
 			instruction_count_final => std_logic_vector(instr_fill_count)
         );
      
@@ -284,6 +291,13 @@ begin
 --    probe0(0) => system_bin,
 --    probe1(0) => force_reset(CPU_DATA_WIDTH-1),
 --    probe2 => std_logic_vector(instr_fill_count)
+--    );	
+
+--    ILA_SYSTEM_PROGRAM_DATA: ila_program_data port map(
+--    clk => clk,
+--    probe2(0) => system_bin,
+--    probe0 => program_data,
+--    probe1 => program_address
 --    );	
         
     -- Just added to force the tools not to optimize away the logic

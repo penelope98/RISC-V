@@ -6,7 +6,7 @@ use std.textio.all;
 
 entity program_ram is
     generic (
-        PROGRAM_ADDRESS_WIDTH: natural := 10;
+        PROGRAM_ADDRESS_WIDTH: natural := 6;
         DATA_WIDTH: natural := 32
     );
     
@@ -27,16 +27,17 @@ architecture behavioral of program_ram is
     signal ram: ram_type;
     alias word_address: std_logic_vector(PROGRAM_ADDRESS_WIDTH-2 downto 0) is address(PROGRAM_ADDRESS_WIDTH-1 downto 1);
 
+    signal debug_read: std_logic_vector(DATA_WIDTH-1 downto 0);
 
-    component ila_regs port(
-        clk: in std_logic;
-        probe0: in std_logic_vector(15 downto 0);
-        probe1: in std_logic_vector(15 downto 0);
-        probe2: in std_logic_vector(15 downto 0);
-        probe3: in std_logic_vector(15 downto 0);
-        probe4: in std_logic_vector(4 downto 0);
-        probe5: in std_logic_vector(0 downto 0 ));
-    end component;
+--    component ila_regs port(
+--        clk: in std_logic;
+--        probe0: in std_logic_vector(31 downto 0);
+--        probe1: in std_logic_vector(15 downto 0);
+--        probe2: in std_logic_vector(15 downto 0);
+--        probe3: in std_logic_vector(8 downto 0);
+--        probe4: in std_logic_vector(4 downto 0);
+--        probe5: in std_logic_vector(0 downto 0 ));
+--    end component;
 
 
 begin
@@ -53,17 +54,18 @@ begin
         end if;
     end process instruction_ram;
 
-    read_data <= ram(to_integer(unsigned(word_address))+1)& ram(to_integer(unsigned(word_address)));
+    debug_read <= ram(to_integer(unsigned(word_address))+1)& ram(to_integer(unsigned(word_address)));
+    read_data <= debug_read;
     
-	ILA_RAM: ila_regs port map(
-    clk => clk,
-    probe0 => ram(0),
-    probe1 => ram(1),
-    probe2 => ram(2),
-    probe3 => ram(3),
-    probe4 => address(4 downto 0),
-    probe5(0) => write_en
-    );
+--	ILA_RAM: ila_regs port map(
+--    clk => clk,
+--    probe0 => debug_read,
+--    probe1 => ram(4),
+--    probe2 => ram(5),
+--    probe4 => address(4 downto 0),
+--    probe3 => word_address,
+--    probe5(0) => write_en
+--    );
 
 
 end behavioral;

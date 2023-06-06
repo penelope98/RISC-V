@@ -13,7 +13,7 @@ use work.common.all;
 
 entity risc_v is    
     generic(
-        PROGRAM_ADDRESS_WIDTH: natural := 10;
+        PROGRAM_ADDRESS_WIDTH: natural := 6;
         DATA_ADDRESS_WIDTH: natural := 6;
         CPU_DATA_WIDTH: natural := 32;
         REGISTER_FILE_ADDRESS_WIDTH: natural := 5
@@ -29,6 +29,7 @@ entity risc_v is
         data_read: in std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
         data_write_en: out std_logic;
         data_write: out std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
+        state_calculate: in std_logic;
 		instruction_count_final: in std_logic_vector(PROGRAM_ADDRESS_WIDTH-1 downto 0)
     );        
 end risc_v;
@@ -285,9 +286,10 @@ architecture behavioral of risc_v is
 --       probe0: in std_logic_vector(31 downto 0);
 --       probe1: in std_logic_vector(9 downto 0);
 --       probe2: in std_logic_vector(9 downto 0);
---       probe3: in std_logic_vector(0 downto 0);
+--       probe3: in std_logic_vector(9 downto 0);
 --       probe4: in std_logic_vector(0 downto 0);
---       probe5: in std_logic_vector(9 downto 0));
+--       probe5: in std_logic_vector(0 downto 0)
+--       );
 --     end component;
 
 	   
@@ -750,9 +752,9 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 --    probe0 => program_read,
 --    probe1 => pc_reg,
 --    probe2 => pc_next,
---    probe3(0) => reset_n,
---    probe4(0) => pc_src,
---    probe5 => instruction_count_final
+--    probe3 => instruction_count_final,
+--    probe4(0) => reset_n,
+--    probe5(0) => state_calculate
 --    );	
        
     
