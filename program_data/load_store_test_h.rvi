@@ -1,0 +1,11 @@
+addi $1, $0, 1
+addi $2, $0, 2
+addi $3, $0, 3
+addi $4, $0, 4  
+sw $1, $4, 4 #sw x4,2(x1) mem 3
+addi $0, $0, 0
+lw $5, $1, 4 #lw x3,2(x1) 
+addi $6, $5, 1
+addi $0, $0, 0
+addi $0, $0, 0
+addi $0, $0, 0
