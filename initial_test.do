@@ -36,7 +36,6 @@ add wave -position end -color "Thistle" -radix "Decimal" sim:/testbench/sys/cpu/
 add wave -position end -color "Thistle" -radix "Decimal" sim:/testbench/sys/cpu/ex_alu_result
 add wave -position end  -radix "Decimal" sim:/testbench/sys/cpu/alu_unit/alu_result
 add wave -position end  -radix "Decimal" sim:/testbench/sys/cpu/alu_unit/abs_left
-add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_mem_read
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_mem_write
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_reg_write
 add wave -position end -color "Orchid" sim:/testbench/sys/cpu/ex_mem_reg.control_mem_to_reg
@@ -61,14 +60,7 @@ add wave -position end -color "Blue" sim:/testbench/sys/cpu/id_control_is_branch
 add wave -position end -color "Blue" -radix "Unsigned" sim:/testbench/sys/cpu/id_branch_address
 add wave -position end  sim:/testbench/sys/cpu/pc_src
 add wave -position end -radix "Unsigned"  sim:/testbench/sys/cpu/pc_reg
-add wave -position end -radix "Unsigned" sim:/testbench/sys/cpu/comparator_unit_unsigned/left_operand
-add wave -position end -radix "Unsigned" sim:/testbench/sys/cpu/comparator_unit_unsigned/right_operand
-add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/equal32
-add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/great32
-add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/less32
-add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/gre
-add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/les
-add wave -position end  sim:/testbench/sys/cpu/comparator_unit_unsigned/equ
+
 
 
 

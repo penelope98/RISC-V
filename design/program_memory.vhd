@@ -41,7 +41,7 @@ architecture behavioral of program_memory is
         return ram;        
     end function;
     
-    signal ram: ram_type := initRAM("C:\Users\Penelope\Desktop\LU\2nd sem\ICP1 RISC-V\Modelsim\NEW_COMPRESSED.mem");
+    signal ram: ram_type := initRAM("C:\Users\Penelope\Desktop\LU\2nd sem\ICP1 RISC-V\Modelsim\branch_test.mem");
     
     alias word_address: std_logic_vector(ADDRESS_WIDTH-2 downto 0) is address(ADDRESS_WIDTH-1 downto 1);
 begin

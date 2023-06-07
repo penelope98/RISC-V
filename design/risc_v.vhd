@@ -243,7 +243,7 @@ architecture behavioral of risc_v is
     signal wb_register_file_write_data: std_logic_vector(CPU_DATA_WIDTH-1 downto 0);
 
     -- control>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    signal pc_src: std_logic;
+    signal pc_src,reg_rst,loop_flag: std_logic;
     signal forward_controls: forward_control_type;
 --COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	
@@ -259,27 +259,8 @@ architecture behavioral of risc_v is
 	signal input_instruction: instruction_type;
 	
 	 --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~COMPONENTS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	component comparator 
-    generic(DATA_WIDTH: integer := 32);
-    port(
-        left_operand: in std_logic_vector(DATA_WIDTH-1 downto 0);
-        right_operand: in std_logic_vector(DATA_WIDTH-1 downto 0);
-        equal32: out std_logic; 
-		great32: out std_logic; 
-		less32: out std_logic
-    );
-	end component;
-          
-	component abs_value
-	generic(DATA_WIDTH: integer := 32);
-	port(
-        original: in std_logic_vector(DATA_WIDTH-1 downto 0);
-		absolute: out std_logic_vector(DATA_WIDTH-1 downto 0)
-    );
-	end component;
-	
-	
-	
+
+
 	component ila_program port(
        clk: in std_logic;
        probe0: in std_logic_vector(31 downto 0);
@@ -319,7 +300,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         )
         port map (
             clk => clk,
-            reset_n => reset_n,
+            reset_n => reg_rst,
             write_en => mem_wb_reg.control_reg_write,
             read1_id => if_id_reg.instruction.rs1,
             read2_id => if_id_reg.instruction.rs2,
@@ -338,47 +319,41 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
             result => ex_alu_result
         );
 	
+	comparator_process: process(id_read1_final_data,id_read2_final_data) is
+	begin
 	
-	abs_unit_1: abs_value 
-		generic map ( DATA_WIDTH => CPU_DATA_WIDTH )    
-		port map( original=>id_read1_final_data, absolute => id_read1_final_data_signfixed);
-	abs_unit_2: abs_value 
-		generic map ( DATA_WIDTH => CPU_DATA_WIDTH )    
-		port map( original=>id_read2_final_data, absolute => id_read2_final_data_signfixed);
+		comparator_equal_s <= '0';
+		comparator_great_s <= '0';
+		comparator_less_s <= '0';
+		comparator_equal <= '0';
+		comparator_great <= '0';
+		comparator_less <= '0';
 	
-	comparator_unit_unsigned: comparator 
-		generic map (
-            DATA_WIDTH => CPU_DATA_WIDTH
-        )
-		port map(
-        left_operand => id_read1_final_data,
-        right_operand => id_read2_final_data,
-        equal32 => comparator_equal,
-		great32 => comparator_great,
-		less32 => comparator_less
-		);
-
-	comparator_unit_signed: comparator 
-		generic map (
-            DATA_WIDTH => CPU_DATA_WIDTH
-        )    
-		port map(
-        left_operand => id_read1_final_data_signfixed,
-        right_operand => id_read2_final_data_signfixed,
-        equal32 => comparator_equal_s,
-		great32 => comparator_great_s,
-		less32 => comparator_less_s
-		);
-
-
+		if(signed(id_read1_final_data) < signed(id_read2_final_data)) then
+			comparator_less_s <= '1';
+		elsif (signed(id_read1_final_data) > signed(id_read2_final_data)) then
+			comparator_great_s <= '1';
+		elsif ( unsigned(id_read1_final_data) < unsigned(id_read2_final_data) ) then
+			comparator_less <= '1';
+		elsif ( unsigned(id_read1_final_data) > unsigned(id_read2_final_data) ) then
+			comparator_great <= '1';
+		elsif ( id_read2_final_data = id_read1_final_data ) then
+			comparator_equal <= '1';
+			comparator_equal_s <= '1';
+		end if;
+	
+	end process;
+			
 	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
 
 --############################################################################################################PROCESSES####################################################3
     next_pc_logic: process (pc_reg, id_branch_address, pc_src,pc_cmp,instruction_count_final) is
     begin
         
+        loop_flag <= '0';
 		if( pc_reg = instruction_count_final) then
 			pc_next <= ( others => '0');
+			loop_flag <= '1';
 		else
 			if pc_src = '0' and pc_cmp = '0' then
 				pc_next <= std_logic_vector(unsigned(pc_reg) + 4);
@@ -389,16 +364,9 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 			end if;	
 		end if;
 			
-		--if (unsigned(pc_reg) < unsigned(instruction_count_final)) then
-			--if pc_src = '0' and pc_cmp = '0' then
-			--	pc_next <= std_logic_vector(unsigned(pc_reg) + 4);
-			--elsif pc_src = '0' and pc_cmp = '1' then
-			--	pc_next <= std_logic_vector(unsigned(pc_reg) + 2);
-			--end if;
-		--else
-           -- pc_next <= id_branch_address;
-       -- end if;
     end process next_pc_logic;
+    
+    reg_rst <= loop_flag or reset_n;
 	
 --COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<	
     --------------------------------------
@@ -761,7 +729,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     probe0 => program_read,
     probe1 => pc_reg,
     probe2 => instruction_count_final,
-    probe3(0) => reset_n,
+    probe3(0) => reg_rst,
     probe4(0) => state_calculate
     );	
        

@@ -43,7 +43,6 @@ begin
         port map (
             clk => clk,
             reset_n => reset_risc,
-			b_Enter => '0',
             program_read => program_data,
             pc => program_address,
             data_address => data_address,
