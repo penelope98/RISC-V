@@ -29,17 +29,15 @@ architecture behavioral of register_file is
     type register_array is array (0 to REGISTER_FILE_SIZE-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
     signal registers: register_array := ( others => (others => '0'));
     
---    component ila_newregs port(
---        clk: in std_logic;
---        probe0: in std_logic_vector(31 downto 0);
---        probe1: in std_logic_vector(31 downto 0);
---        probe2: in std_logic_vector(31 downto 0);
---        probe3: in std_logic_vector(31 downto 0);
---        probe4: in std_logic_vector(31 downto 0);
---        probe5: in std_logic_vector(31 downto 0);
---        probe6: in std_logic_vector(4 downto 0);
---        probe7: in std_logic_vector(0 downto 0 ));
---    end component;
+    component ila_regs port(
+        clk: in std_logic;
+        probe0: in std_logic_vector(31 downto 0);
+        probe1: in std_logic_vector(31 downto 0);
+        probe2: in std_logic_vector(31 downto 0);
+        probe3: in std_logic_vector(31 downto 0);
+        probe4: in std_logic_vector(4 downto 0);
+        probe5: in std_logic_vector(0 downto 0 ));
+    end component;
 
 
      
@@ -64,17 +62,15 @@ begin
     read2_data <= registers(to_integer(unsigned(read2_id)));
     
     
---	ILA_REGFILE: ila_newregs port map(
---    clk => clk,
---    probe0 => registers(10),
---    probe1 => registers(11),
---    probe2 => registers(12),
---    probe3 => write_data,
---    probe4 => registers(9),
---    probe5 => registers(15),
---    probe6 => write_id,
---    probe7(0) => write_en
---    );
+	ILA_REGFILE: ila_regs port map(
+    clk => clk,
+    probe0 => registers(10),
+    probe1 => registers(11),
+    probe2 => write_data,
+    probe3 => registers(9),
+    probe4 => write_id,
+    probe5(0) => write_en
+    );
     
 
 end behavioral;

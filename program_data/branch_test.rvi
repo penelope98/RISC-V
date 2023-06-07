@@ -1,0 +1,45 @@
+addi $1, $0, 1              
+addi $2, $0, 2              
+addi $3, $0, 3              	
+addi $4, $0, -4            	
+bne $2, $1, NOT_EQUAL                       
+addi $5, $1, 1          
+addi $1, $1, 1                        
+NOT_EQUAL:
+add $0, $0, $0 
+blt $4, $3, LESS_THAN	
+addi $6, $1, 1          
+addi $1, $1, 1                    
+add $0, $0, $0 
+LESS_THAN:
+add $0, $0, $0 
+bge $3, $4, GREAT_THAN 	
+addi $7, $1, 1          
+addi $1, $1, 1                     
+add $0, $0, $0 
+GREAT_THAN:
+add $0, $0, $0 
+bltu $3, $4, BLTU_THAN 	
+addi $8, $1, 1          
+addi $1, $1, 1                      
+add $0, $0, $0 
+BLTU_THAN:
+add $0, $0, $0 
+bgeu $4, $3, BGEU_THAN 	
+addi $9, $1, 1         
+addi $1, $1, 1                      
+add $0, $0, $0 
+BGEU_THAN:
+add $0, $0, $0 
+bgeu $4, $3, LAST	
+addi $10, $1, 1          
+addi $0, $1, 1                     
+add $0, $0, $0 
+LAST:
+addi $3, $0, 15             
+add $0, $0, $0              
+add $0, $0, $0
+add $0, $0, $0
+add $0, $0, $0
+add $0, $0, $0
+add $0, $0, $0
