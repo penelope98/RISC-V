@@ -16,7 +16,6 @@ entity system_serial is
     port (
         clk: in std_logic;
         reset_n: in std_logic;
-        b_Enter: in std_logic;
 		input_data: in std_logic;
 		output_led: out std_logic
     );
@@ -51,7 +50,7 @@ architecture structural of system_serial is
 	signal new_char: std_logic_vector(CHARACTER_SIZE-1 downto 0); --new char from uart
 	
 	signal ram_write_enable: std_logic;
-	signal eot,risc_reset,force_flag: std_logic; --signals the end of instruction read from uart
+	signal risc_reset,force_flag: std_logic; --signals the end of instruction read from uart
 	signal force_reset: std_logic_vector(CPU_COMPRESSED_WIDTH-1 downto 0);
 	--buffers for ram
 	signal i_get_current,i_get_next: std_logic;
@@ -115,7 +114,6 @@ begin
         port map (
             clk => clk,
             reset_n => risc_reset,
-            b_Enter => b_Enter,
             program_read => program_data,
             pc => program_counter,
             data_address => data_address,
@@ -254,7 +252,7 @@ begin
 	
 	write_address_next <= std_logic_vector(instr_fill_count);
 	i_get_next<=instr_get;
-	output_led <= eot;
+	output_led <= system_bin;
 	
 -----------------------------------DEBUG--------------------------------------------------------------------------------------------
 	process(system_state) is

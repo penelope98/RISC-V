@@ -22,7 +22,6 @@ entity risc_v is
     port(
         clk: in std_logic;
         reset_n: in std_logic;
-        b_Enter: in std_logic;
         program_read: in std_logic_vector(INSTRUCTION_WIDTH-1 downto 0);
         pc: out std_logic_vector(PROGRAM_ADDRESS_WIDTH-1 downto 0);
         data_address: out std_logic_vector(DATA_ADDRESS_WIDTH-1 downto 0);
@@ -60,7 +59,7 @@ architecture behavioral of risc_v is
     type id_ex_type is record
         control_alu_op: std_logic_vector(1 downto 0);
         control_alu_src: std_logic;
-        control_mem_read: std_logic;
+        --control_mem_read: std_logic;
         control_mem_write: std_logic;
         control_reg_write: std_logic;
         control_mem_to_reg: std_logic;
@@ -74,7 +73,7 @@ architecture behavioral of risc_v is
     end record;
     
     type ex_mem_type is record
-        control_mem_read: std_logic;
+        --control_mem_read: std_logic;
         control_mem_write: std_logic;
         control_reg_write: std_logic;
         control_mem_to_reg: std_logic;    
@@ -281,16 +280,15 @@ architecture behavioral of risc_v is
 	
 	
 	
---	component ila_program port(
---       clk: in std_logic;
---       probe0: in std_logic_vector(31 downto 0);
---       probe1: in std_logic_vector(9 downto 0);
---       probe2: in std_logic_vector(9 downto 0);
---       probe3: in std_logic_vector(9 downto 0);
---       probe4: in std_logic_vector(0 downto 0);
---       probe5: in std_logic_vector(0 downto 0)
---       );
---     end component;
+	component ila_program port(
+       clk: in std_logic;
+       probe0: in std_logic_vector(31 downto 0);
+       probe1: in std_logic_vector(9 downto 0);
+       probe2: in std_logic_vector(9 downto 0);
+       probe3: in std_logic_vector(0 downto 0);
+       probe4: in std_logic_vector(0 downto 0)
+       );
+     end component;
 
 	   
 begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -301,8 +299,8 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
             if reset_n = '1' then
                 pc_reg <= (others => '0');
                 if_id_reg <= (instruction => (others => (others => '0')), others => (others => '0'));               
-                id_ex_reg <= ("00", '0', '0', '0', '0', '0', others => (others => '0'));
-                ex_mem_reg <= ('0', '0', '0', '0',others => (others => '0'));
+                id_ex_reg <= ("00", '0', '0', '0', '0', others => (others => '0'));
+                ex_mem_reg <= ('0', '0', '0',others => (others => '0'));
                 mem_wb_reg <= ('0', '0', others => (others => '0'));
             else
                 pc_reg <= pc_next;
@@ -322,7 +320,6 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         port map (
             clk => clk,
             reset_n => reset_n,
-            b_Enter => b_Enter,
             write_en => mem_wb_reg.control_reg_write,
             read1_id => if_id_reg.instruction.rs1,
             read2_id => if_id_reg.instruction.rs2,
@@ -380,15 +377,27 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     next_pc_logic: process (pc_reg, id_branch_address, pc_src,pc_cmp,instruction_count_final) is
     begin
         
-		if (unsigned(pc_reg) < unsigned(instruction_count_final)) then
+		if( pc_reg = instruction_count_final) then
+			pc_next <= ( others => '0');
+		else
 			if pc_src = '0' and pc_cmp = '0' then
 				pc_next <= std_logic_vector(unsigned(pc_reg) + 4);
 			elsif pc_src = '0' and pc_cmp = '1' then
 				pc_next <= std_logic_vector(unsigned(pc_reg) + 2);
-			end if;
-		else
-            pc_next <= id_branch_address;
-        end if;
+			else
+				pc_next <= id_branch_address;
+			end if;	
+		end if;
+			
+		--if (unsigned(pc_reg) < unsigned(instruction_count_final)) then
+			--if pc_src = '0' and pc_cmp = '0' then
+			--	pc_next <= std_logic_vector(unsigned(pc_reg) + 4);
+			--elsif pc_src = '0' and pc_cmp = '1' then
+			--	pc_next <= std_logic_vector(unsigned(pc_reg) + 2);
+			--end if;
+		--else
+           -- pc_next <= id_branch_address;
+       -- end if;
     end process next_pc_logic;
 	
 --COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<COMPRESSED MODE <<<<<<<<<<<<<<COMPRESSED MODE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<	
@@ -706,7 +715,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     id_ex_next <= (
         control_alu_op => id_control_alu_op,
         control_alu_src => id_control_alu_src,
-        control_mem_read => id_control_mem_read,
+        --control_mem_read => id_control_mem_read,
         control_mem_write => id_control_mem_write,
         control_reg_write => id_control_reg_write,
         control_mem_to_reg => id_control_mem_to_reg,
@@ -720,7 +729,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     );
  
     ex_mem_next <= (
-        control_mem_read => id_ex_reg.control_mem_read, 
+        --control_mem_read => id_ex_reg.control_mem_read, 
         control_mem_write => id_ex_reg.control_mem_write, 
         control_reg_write => id_ex_reg.control_reg_write, 
         control_mem_to_reg => id_ex_reg.control_mem_to_reg,
@@ -747,15 +756,14 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     data_write_en <= ex_mem_reg.control_mem_write;  
     
     
---    ILA_PROGRAM_READ: ila_program port map(
---    clk => clk,
---    probe0 => program_read,
---    probe1 => pc_reg,
---    probe2 => pc_next,
---    probe3 => instruction_count_final,
---    probe4(0) => reset_n,
---    probe5(0) => state_calculate
---    );	
+    ILA_PROGRAM_READ: ila_program port map(
+    clk => clk,
+    probe0 => program_read,
+    probe1 => pc_reg,
+    probe2 => instruction_count_final,
+    probe3(0) => reset_n,
+    probe4(0) => state_calculate
+    );	
        
     
 end behavioral;

@@ -1,5 +1,9 @@
-c.lui $3,1             
-c.lui $3,2                   	
-c.lui $3,3
-c.lui $3,4
+c.li $9,7
+c.li $10,1
+c.lui $11,3
+c.addi $12,-4
+c.srai $4,2 
+c.srai $3,2
+c.or $1,$2 
+c.xor $2,$5
 

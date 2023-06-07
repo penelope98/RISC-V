@@ -49,7 +49,9 @@ begin
             data_address => data_address,
             data_read => data_read,
             data_write_en => data_write_en,
-            data_write => data_write
+            data_write => data_write,
+			state_calculate => '0',
+			instruction_count_final => "1000000000"
         );
     
     prog_mem: entity work.program_memory 

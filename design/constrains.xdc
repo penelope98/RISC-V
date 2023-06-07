@@ -7,7 +7,7 @@
 #Bank = 35, Pin name = IO_L12P_T1_MRCC_35,					Sch name = CLK100MHZ
 set_property PACKAGE_PIN E3 [get_ports clk]							
 	set_property IOSTANDARD LVCMOS33 [get_ports clk]
-	create_clock -add -name sys_clk_pin -period 100.00 -waveform {0 5} [get_ports clk]
+	create_clock -add -name sys_clk_pin -period 20.00 -waveform {0 5} [get_ports clk]
  
 ## Switches
 #Bank = 34, Pin name = IO_L21P_T3_DQS_34,					Sch name = SW0
@@ -191,8 +191,8 @@ set_property PACKAGE_PIN T8 [get_ports output_led]
 set_property PACKAGE_PIN C12 [get_ports {reset_n}]				
 	set_property IOSTANDARD LVCMOS33 [get_ports {reset_n}]
 #Bank = 15, Pin name = IO_L11N_T1_SRCC_15,					Sch name = BTNC
-set_property PACKAGE_PIN E16 [get_ports {b_Enter}]						
-	set_property IOSTANDARD LVCMOS33 [get_ports {b_Enter}]
+#set_property PACKAGE_PIN E16 [get_ports {b_Enter}]						
+#	set_property IOSTANDARD LVCMOS33 [get_ports {b_Enter}]
 ##Bank = 15, Pin name = IO_L14P_T2_SRCC_15,					Sch name = BTNU
 #set_property PACKAGE_PIN F15 [get_ports b_Enter]						
 #	set_property IOSTANDARD LVCMOS33 [get_ports b_Enter]
