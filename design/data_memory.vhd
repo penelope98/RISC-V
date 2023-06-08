@@ -28,6 +28,19 @@ architecture behavioral of data_memory is
         others => "00000000000000000000000000000000"
     );
 
+--    component ila_regs port(
+--        clk: in std_logic;
+--        probe0: in std_logic_vector(31 downto 0);
+--        probe1: in std_logic_vector(31 downto 0);
+--        probe2: in std_logic_vector(31 downto 0);
+--        probe3: in std_logic_vector(31 downto 0);
+--        probe4: in std_logic_vector(4 downto 0);
+--        probe5: in std_logic_vector(0 downto 0 ));
+--    end component;
+
+
+
+
 begin
 
     data_ram: process (clk) is
@@ -43,5 +56,17 @@ begin
     end process data_ram;
 
     read_data <= ram(to_integer(unsigned(address)));
+    
+    
+--    ILA_RAMS: ila_regs port map(
+--    clk => clk,
+--    probe0 => write_data,
+--    probe1 => ram(0),
+--    probe2 => ram(1),
+--    probe3 => ram(2),
+--    probe4 => address(4 downto 0) ,
+--    probe5(0) => write_en
+--    );
+
 
 end behavioral;

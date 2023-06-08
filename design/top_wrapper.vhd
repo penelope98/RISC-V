@@ -24,14 +24,12 @@ end top_wrapper;
 architecture Behavioral of top_wrapper is
 
 
---    component clk_wizard_top
---    port (
---        reset: in std_logic;
---        clk_in1: in std_logic;
---        clk_out1: out std_logic;
---        locked: out std_logic
---    );
---    end component;
+    component clk_wizard_top
+    port (
+        clk_in1: in std_logic;
+        clk_out1: out std_logic
+    );
+    end component;
     signal new_clk: std_logic;
 
 begin
@@ -45,19 +43,18 @@ begin
 		CHARACTER_SIZE => CHARACTER_SIZE
         )
         port map (
-                clk => clk,
+                clk => new_clk,
                 reset_n => reset_n,
 		        input_data => input_data,
 		        output_led => output_led
         );
      
 
---    clock_wizard_inst : clk_wizard_top
---        port map (
---        reset => reset_n,
---        clk_in1 => clk,
---        clk_out1 => new_clk
---        );
+    clock_wizard_inst : clk_wizard_top
+        port map (
+        clk_in1 => clk,
+        clk_out1 => new_clk
+        );
 
 
 end Behavioral;

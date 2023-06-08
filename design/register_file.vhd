@@ -64,8 +64,8 @@ begin
     
 	ILA_REGFILE: ila_regs port map(
     clk => clk,
-    probe0 => registers(10),
-    probe1 => registers(11),
+    probe0 => registers(7),
+    probe1 => registers(8),
     probe2 => write_data,
     probe3 => registers(9),
     probe4 => write_id,
