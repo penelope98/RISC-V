@@ -387,9 +387,9 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     
 		if program_read (1 downto 0) = "00" then
 			if program_read(15 downto 13) = "010" then --C.LW
-				expanded_instruction <= "00000" & program_read(5) & program_read(12 downto 10) & program_read(6) & "0000" & program_read(9 downto 7) & program_read(15 downto 13) & "00" & program_read(4 downto 2) & "0000011";
+				expanded_instruction <= "00000" & program_read(5) & program_read(12 downto 10) & program_read(6) & "00" & "01" & program_read(9 downto 7) & program_read(15 downto 13) & "01" & program_read(4 downto 2) & "0000011";
 			elsif program_read(15 downto 13) = "110" then --C.SW
-				expanded_instruction <= "00000" & program_read(5) & program_read(12) & "00" & program_read(4 downto 2) & "00" & program_read(9 downto 7) & program_read(15 downto 13) & program_read(11 downto 10) & program_read(6) & "00" & "0100011";
+				expanded_instruction <= "00000" & program_read(5) & program_read(12) & "01" & program_read(4 downto 2) & "01" & program_read(9 downto 7) & "010" & program_read(11 downto 10) & program_read(6) & "00" & "0100011";
 			end if;
 		elsif program_read (1 downto 0) = "10" then
 			if program_read(15 downto 13) = "000" then --C.SLLI
