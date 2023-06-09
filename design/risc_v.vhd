@@ -255,7 +255,7 @@ architecture behavioral of risc_v is
 	--additional>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	signal comparator_great,comparator_less,comparator_equal,comparator_great_s,comparator_less_s,comparator_equal_s: std_logic;
 	
-	signal flush_instruction: std_logic;
+	signal flush_instruction,hazard_detect_flag: std_logic;
 	signal input_instruction: instruction_type;
 	
 	 --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~COMPONENTS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,7 +267,10 @@ architecture behavioral of risc_v is
        probe1: in std_logic_vector(9 downto 0);
        probe2: in std_logic_vector(9 downto 0);
        probe3: in std_logic_vector(0 downto 0);
-       probe4: in std_logic_vector(0 downto 0)
+       probe4: in std_logic_vector(0 downto 0);
+       probe5: in std_logic_vector(4 downto 0);
+       probe6: in std_logic_vector(4 downto 0);
+       probe7: in std_logic_vector(4 downto 0)       
        );
      end component;
 
@@ -331,13 +334,17 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	
 		if(signed(id_read1_final_data) < signed(id_read2_final_data)) then
 			comparator_less_s <= '1';
-		elsif (signed(id_read1_final_data) > signed(id_read2_final_data)) then
+		end if;
+		if (signed(id_read1_final_data) > signed(id_read2_final_data)) then
 			comparator_great_s <= '1';
-		elsif ( unsigned(id_read1_final_data) < unsigned(id_read2_final_data) ) then
+		end if;
+		if ( unsigned(id_read1_final_data) < unsigned(id_read2_final_data) ) then
 			comparator_less <= '1';
-		elsif ( unsigned(id_read1_final_data) > unsigned(id_read2_final_data) ) then
+		end if;
+		if ( unsigned(id_read1_final_data) > unsigned(id_read2_final_data) ) then
 			comparator_great <= '1';
-		elsif ( id_read2_final_data = id_read1_final_data ) then
+		end if;
+		if ( id_read2_final_data = id_read1_final_data ) then
 			comparator_equal <= '1';
 			comparator_equal_s <= '1';
 		end if;
@@ -347,21 +354,26 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
 
 --############################################################################################################PROCESSES####################################################3
-    next_pc_logic: process (pc_reg, id_branch_address, pc_src,pc_cmp,instruction_count_final) is
+    next_pc_logic: process (pc_reg, id_branch_address, pc_src,pc_cmp,instruction_count_final,hazard_detect_flag) is
     begin
         
         loop_flag <= '0';
-		if( pc_reg = instruction_count_final) then
+		if( unsigned(pc_reg) > unsigned(instruction_count_final)) then
 			pc_next <= ( others => '0');
 			loop_flag <= '1';
 		else
-			if pc_src = '0' and pc_cmp = '0' then
-				pc_next <= std_logic_vector(unsigned(pc_reg) + 4);
-			elsif pc_src = '0' and pc_cmp = '1' then
-				pc_next <= std_logic_vector(unsigned(pc_reg) + 2);
+		
+			if  hazard_detect_flag = '1'  then
+					pc_next <= pc_reg; 
+			elsif( pc_src = '0' ) then
+				if pc_cmp = '1' then
+					pc_next <= std_logic_vector(unsigned(pc_reg) + 2);
+				else 
+					pc_next <= std_logic_vector(unsigned(pc_reg) + 4);	
+				end if;
 			else
 				pc_next <= id_branch_address;
-			end if;	
+			end if;			
 		end if;
 			
     end process next_pc_logic;
@@ -387,9 +399,9 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     
 		if program_read (1 downto 0) = "00" then
 			if program_read(15 downto 13) = "010" then --C.LW
-				expanded_instruction <= "00000" & program_read(5) & program_read(12 downto 10) & program_read(6) & "0000" & program_read(9 downto 7) & program_read(15 downto 13) & "00" & program_read(4 downto 2) & "0000011";
+				expanded_instruction <= "00000" & program_read(5) & program_read(12 downto 10) & program_read(6) & "00" & "01" & program_read(9 downto 7) & program_read(15 downto 13) & "01" & program_read(4 downto 2) & "0000011";
 			elsif program_read(15 downto 13) = "110" then --C.SW
-				expanded_instruction <= "00000" & program_read(5) & program_read(12) & "00" & program_read(4 downto 2) & "00" & program_read(9 downto 7) & program_read(15 downto 13) & program_read(11 downto 10) & program_read(6) & "00" & "0100011";
+				expanded_instruction <= "00000" & program_read(5) & program_read(12) & "01" & program_read(4 downto 2) & "01" & program_read(9 downto 7) & "010" & program_read(11 downto 10) & program_read(6) & "00" & "0100011";
 			end if;
 		elsif program_read (1 downto 0) = "10" then
 			if program_read(15 downto 13) = "000" then --C.SLLI
@@ -545,7 +557,7 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 		elsif id_ex_reg.control_alu_op = "01" then 	
 				ex_alu_control <= ALU_LUI;	
 		else
-			 ex_alu_control <= ALU_LUI; 
+			 ex_alu_control <= ALU_ADD; 
 		end if;
 	
     end process alu_control_process;
@@ -667,35 +679,89 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 			);
 		end if;
 	end process;	
-	--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	
+	
+----------------------------------------------------hazard detection-------------------------------------------------------------------------------
+	
+
+    hazard_detect: process (id_ex_reg.control_mem_to_reg,id_ex_reg.register_file_rd,if_id_reg.instruction.rs1,if_id_reg.instruction.rs2) is
+    begin
+    
+        if id_ex_reg.control_mem_to_reg ='1' and ((id_ex_reg.register_file_rd = if_id_reg.instruction.rs1 ) or (id_ex_reg.register_file_rd = if_id_reg.instruction.rs2 )) then
+            hazard_detect_flag <= '1'; 
+        else 
+            hazard_detect_flag <= '0';
+        end if;
+ 
+    end process; 
 	
     ---------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     -- Pipeline registers next state logic
-    if_id_next <= (
-        pc => pc_reg, 
-		instruction => input_instruction
-        --instruction => (
-          --  program_read(31 downto 25), program_read(24 downto 20), program_read(19 downto 15), 
-           -- program_read(14 downto 12), program_read(11 downto 7), program_read(6 downto 0)
-        --)
-    );
+	
+	bubble_insert_if_id: process(hazard_detect_flag,pc_reg,if_id_reg,input_instruction) is
+	begin
+		if ( hazard_detect_flag = '0' ) then
+			if_id_next <= (
+				pc => pc_reg, 
+				instruction => input_instruction
+			);
+	
+		else
+			if_id_next <= if_id_reg; 
+		end if;
+		
+	end process;
 
-    id_ex_next <= (
-        control_alu_op => id_control_alu_op,
-        control_alu_src => id_control_alu_src,
-        --control_mem_read => id_control_mem_read,
-        control_mem_write => id_control_mem_write,
-        control_reg_write => id_control_reg_write,
-        control_mem_to_reg => id_control_mem_to_reg,
-        register_file_data1 => id_read1_final_data, 
-        register_file_data2 => id_read2_final_data, 
-        sign_extended_immediate => id_sign_extended_immediate, 
-        alu_control => if_id_reg.instruction.funct7(5) & if_id_reg.instruction.funct3, -- FUNCT7(5) & FUNCT3
-        register_file_rs1 => if_id_reg.instruction.rs1,
-        register_file_rs2 => if_id_reg.instruction.rs2,
-        register_file_rd => if_id_reg.instruction.rd
-    );
+
+	bubble_insert_id_ex: process(hazard_detect_flag,id_control_alu_op,id_control_alu_src,id_control_mem_write,id_control_mem_to_reg,id_read1_final_data,id_read2_final_data,id_sign_extended_immediate,if_id_reg.instruction.funct7,if_id_reg.instruction.funct3,if_id_reg.instruction.rs1,if_id_reg.instruction.rs2,if_id_reg.instruction.rd) is
+	begin
+	
+		if (hazard_detect_flag = '0') then
+		
+			id_ex_next <= (
+			control_alu_op => id_control_alu_op,
+			control_alu_src => id_control_alu_src,
+			--control_mem_read => id_control_mem_read,
+			control_mem_write => id_control_mem_write,
+			control_reg_write => id_control_reg_write,
+			control_mem_to_reg => id_control_mem_to_reg,
+			register_file_data1 => id_read1_final_data, 
+			register_file_data2 => id_read2_final_data, 
+			sign_extended_immediate => id_sign_extended_immediate, 
+			alu_control => if_id_reg.instruction.funct7(5) & if_id_reg.instruction.funct3, -- FUNCT7(5) & FUNCT3
+			register_file_rs1 => if_id_reg.instruction.rs1,
+			register_file_rs2 => if_id_reg.instruction.rs2,
+			register_file_rd => if_id_reg.instruction.rd
+			);
  
+		
+		else
+		
+			id_ex_next <= (
+			control_alu_op => "11",
+			control_alu_src => '1',
+			--control_mem_read => id_control_mem_read,
+			control_mem_write => '0',
+			control_reg_write => '1',
+			control_mem_to_reg => '0',
+			register_file_data1 => (others => '0'), 
+			register_file_data2 => (others => '0'), 
+			sign_extended_immediate => (others => '0'), 
+			alu_control => (others => '0'), -- FUNCT7(5) & FUNCT3
+			register_file_rs1 => (others => '0'),
+			register_file_rs2 => (others => '0'),
+			register_file_rd => (others => '0')
+			);
+			
+		end if;
+	
+	
+	
+	end process;
+
+
+
+    
     ex_mem_next <= (
         --control_mem_read => id_ex_reg.control_mem_read, 
         control_mem_write => id_ex_reg.control_mem_write, 
@@ -729,8 +795,11 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     probe0 => program_read,
     probe1 => pc_reg,
     probe2 => instruction_count_final,
-    probe3(0) => reg_rst,
-    probe4(0) => state_calculate
+    probe3(0) => hazard_detect_flag,
+    probe4(0) => state_calculate,
+    probe5 => id_ex_reg.register_file_rd,
+    probe6 => if_id_reg.instruction.rs1,
+    probe7 => if_id_reg.instruction.rs2
     );	
        
     

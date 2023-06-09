@@ -1,0 +1,15 @@
+addi $1, $0, 11              
+addi $2, $0, 12              
+addi $3, $0, 13 
+sw $0, $1, 4
+sw $0, $2 , 8
+c.lw $8, $9 ,1
+lw $5 ,$0, 8
+add $6, $4, $5
+bne $1, $2, ADDRESS
+addi $6, $0, 56              
+addi $7, $0, 78              
+ADDRESS:
+addi $1, $0, 21              
+addi $2, $0, 22              
+addi $3, $0, 23
