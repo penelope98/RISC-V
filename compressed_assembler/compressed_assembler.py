@@ -31,9 +31,10 @@ def COMP_TRANSLATE(filename):
                 case 1: #lw sw
                     rd_rs2 = np.binary_repr(int(instr_pieces[1][1:]),3)
                     rs1 = np.binary_repr(int(instr_pieces[2][1:]),3)
-                    offst = np.binary_repr(int(instr_pieces[3]),5)
+                    offsti = 4 % int(instr_pieces[3])   
+                    offst = np.binary_repr(offsti,5)
                     bini = entry[0] + offst[1:-1] + rs1 + offst[-1] + offst[0] + rd_rs2 + entry[2]                
-                    #print(bini)
+                    print(offst)
                 case 2: #addi lui li
                     rs1_rd = np.binary_repr(int(instr_pieces[1][1:]),5)
                     nzimm = np.binary_repr(int(instr_pieces[2]),6)
