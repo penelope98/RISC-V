@@ -29,15 +29,15 @@ architecture behavioral of program_ram is
 
     signal debug_read: std_logic_vector(DATA_WIDTH-1 downto 0);
 
---    component ila_ram port(
---        clk: in std_logic;
---        probe0: in std_logic_vector(31 downto 0);
---        probe1: in std_logic_vector(15 downto 0);
---        probe2: in std_logic_vector(15 downto 0);
---        probe3: in std_logic_vector(15 downto 0);
---        probe4: in std_logic_vector(8 downto 0);
---        probe5: in std_logic_vector(0 downto 0 ));
---    end component;
+    component ila_rams port(
+        clk: in std_logic;
+        probe0: in std_logic_vector(31 downto 0);
+        probe1: in std_logic_vector(15 downto 0);
+        probe2: in std_logic_vector(15 downto 0);
+        probe3: in std_logic_vector(15 downto 0);
+        probe4: in std_logic_vector(8 downto 0);
+        probe5: in std_logic_vector(0 downto 0 ));
+    end component;
 
 
 begin
@@ -57,15 +57,15 @@ begin
     debug_read <= ram(to_integer(unsigned(word_address))+1)& ram(to_integer(unsigned(word_address)));
     read_data <= debug_read;
     
---	ILA_RAMS: ila_ram port map(
---    clk => clk,
---    probe0 => debug_read,
---    probe1 => ram(0),
---    probe2 => ram(1),
---    probe3 => ram(2),
---    probe4 => word_address,
---    probe5(0) => write_en
---    );
+	ILA_RAMS_1: ila_rams port map(
+    clk => clk,
+    probe0 => debug_read,
+    probe1 => ram(0),
+    probe2 => ram(1),
+    probe3 => ram(2),
+    probe4 => word_address,
+    probe5(0) => write_en
+    );
 
 
 end behavioral;

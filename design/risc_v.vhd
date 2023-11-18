@@ -258,21 +258,21 @@ architecture behavioral of risc_v is
 	signal flush_instruction,hazard_detect_flag: std_logic;
 	signal input_instruction: instruction_type;
 	
-	 --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~COMPONENTS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--	 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~COMPONENTS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-	component ila_program port(
-       clk: in std_logic;
-       probe0: in std_logic_vector(31 downto 0);
-       probe1: in std_logic_vector(9 downto 0);
-       probe2: in std_logic_vector(9 downto 0);
-       probe3: in std_logic_vector(0 downto 0);
-       probe4: in std_logic_vector(0 downto 0);
-       probe5: in std_logic_vector(4 downto 0);
-       probe6: in std_logic_vector(4 downto 0);
-       probe7: in std_logic_vector(4 downto 0)       
-       );
-     end component;
+--	component ila_program port(
+--       clk: in std_logic;
+--       probe0: in std_logic_vector(31 downto 0);
+--       probe1: in std_logic_vector(9 downto 0);
+--       probe2: in std_logic_vector(9 downto 0);
+--       probe3: in std_logic_vector(0 downto 0);
+--       probe4: in std_logic_vector(0 downto 0);
+--       probe5: in std_logic_vector(4 downto 0);
+--       probe6: in std_logic_vector(4 downto 0);
+--       probe7: in std_logic_vector(4 downto 0)       
+--       );
+--     end component;
 
 	   
 begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -790,17 +790,17 @@ begin --&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     data_write_en <= ex_mem_reg.control_mem_write;  
     
     
-    ILA_PROGRAM_READ: ila_program port map(
-    clk => clk,
-    probe0 => program_read,
-    probe1 => pc_reg,
-    probe2 => instruction_count_final,
-    probe3(0) => hazard_detect_flag,
-    probe4(0) => state_calculate,
-    probe5 => id_ex_reg.register_file_rd,
-    probe6 => if_id_reg.instruction.rs1,
-    probe7 => if_id_reg.instruction.rs2
-    );	
+--    ILA_PROGRAM_READ: ila_program port map(
+--    clk => clk,
+--    probe0 => program_read,
+--    probe1 => pc_reg,
+--    probe2 => instruction_count_final,
+--    probe3(0) => hazard_detect_flag,
+--    probe4(0) => state_calculate,
+--    probe5 => id_ex_reg.register_file_rd,
+--    probe6 => if_id_reg.instruction.rs1,
+--   probe7 => if_id_reg.instruction.rs2
+--    );	
        
     
 end behavioral;

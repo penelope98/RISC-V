@@ -89,6 +89,17 @@ architecture structural of system_serial is
 --            probe2: in std_logic_vector(0 downto 0));
 --     end component;
 
+--     component ila_serial port(
+--            clk: in std_logic;
+--            probe0: in std_logic_vector(15 downto 0);
+--            probe1: in std_logic_vector(0 downto 0);
+--            probe2: in std_logic_vector(9 downto 0);
+--            probe3: in std_logic_vector(7 downto 0);
+--            probe4: in std_logic_vector(0 downto 0);
+--            probe5: in std_logic_vector(0 downto 0)
+--            );
+--     end component;
+
 	--==--==--==--==--==--==--==--==--==--==-==--==--==--==--==--==--==--==--==--==--==--==--==--==--==--==--
 begin
 
@@ -268,12 +279,14 @@ begin
 	end process;
 	
 	
---	ILA_SERIAL: ila_regs port map( 
+--	ILA_SERIAL_0: ila_serial port map( 
 --    clk => clk,
 --    probe0 => new_instr,
 --    probe1(0) => instr_get,
---    probe2 => std_logic_vector(instr_fill_count(4 downto 0)),
---    probe3 => std_logic_vector(instruction_assembled_reg)
+--    probe2 => std_logic_vector(instr_fill_count),
+--    probe3 => new_char,
+--    probe4(0) => char_get,
+--    probe5(0) => input_data
 --     );
        
 --    ILA_UART_SERIAL: ila_char port map(

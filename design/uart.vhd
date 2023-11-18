@@ -20,7 +20,7 @@ architecture uart_arch of uart_inner is
 
 
 	constant BAUD: integer := 115200;
-    constant FREQUENCY_IN_HZ: integer := 50000000; -- "0011 1011 1001 1010 1100 1010 0000 0000"
+    constant FREQUENCY_IN_HZ: integer := 100000000; -- "0011 1011 1001 1010 1100 1010 0000 0000"
     constant BAUD_COUNT_CHECK: integer :=  FREQUENCY_IN_HZ / BAUD; --868
     type state_type is (standby, wait_half_start_bit, wait_full_data_bit, capture_data_bit, wait_full_last_bit);
     
